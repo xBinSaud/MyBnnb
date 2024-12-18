@@ -1,0 +1,13 @@
+{
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "totalRevenue": "إجمالي الإيرادات",
+    "totalBookings": "إجمالي الحجوزات",
+    "averageBooking": "متوسط قيمة الحجز",
+    "occupancyRate": "نسبة الإشغال",
+    "expenses": "المصروفات",
+    "bookings": "الحجوزات",
+    "addExpense": "إضافة مصروف",
+    "addBooking": "إضافة حجز"
+  }
+}

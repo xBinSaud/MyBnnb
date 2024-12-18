@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "totalRevenue": "إجمالي الإيرادات",
+    "averageBooking": "متوسط قيمة الحجز",
+    "occupancyRate": "نسبة الإشغال",
+    "totalBookings": "إجمالي الحجوزات"
+  },
+  "bookings": {
+    "title": "الحجوزات",
+    "status": {
+      "pending": "معلق",
+      "confirmed": "مؤكد",
+      "cancelled": "ملغي"
+    }
+  },
+  "calendar": {
+    "title": "التقويم"
+  },
+  "analytics": {
+    "title": "التحليلات"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "apartments": {
+      "title": "إدارة الشقق",
+      "add": "إضافة شقة",
+      "edit": "تعديل شقة",
+      "delete": "حذف شقة",
+      "name": "اسم الشقة",
+      "description": "وصف الشقة",
+      "location": "الموقع",
+      "pricePerNight": "السعر لليلة الواحدة",
+      "amenities": "المميزات",
+      "images": "الصور"
+    }
+  }
+}

@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Cairo', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1A202C;
+  color: #E2E8F0;
+}
+
+#root {
+  height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #2D3748;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4F6F8F;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6B8CAC;
+}
+
+/* Smooth transitions for all interactive elements */
+a, button, input, select, textarea {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Remove focus outline for mouse users, keep it for keyboard navigation */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Keep focus outline for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #4F6F8F;
+  outline-offset: 2px;
+}
+
+/* Selection color */
+::selection {
+  background-color: rgba(79, 111, 143, 0.3);
+  color: #E2E8F0;
+}
