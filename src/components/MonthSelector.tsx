@@ -58,11 +58,15 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
   const netIncome = totalBookingAmount - totalExpenses;
 
   const handleYearChange = (event: any) => {
-    navigate(`/bookings/${event.target.value}/${selectedMonth}`);
+    const newYear = Number(event.target.value);
+    onYearChange(newYear);
+    navigate(`/bookings/${newYear}/${selectedMonth}`);
   };
 
   const handleMonthChange = (event: any) => {
-    navigate(`/bookings/${selectedYear}/${event.target.value}`);
+    const newMonth = Number(event.target.value);
+    onMonthChange(newMonth);
+    navigate(`/bookings/${selectedYear}/${newMonth}`);
   };
 
   return (
@@ -74,7 +78,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
             labelId="year-select-label"
             value={selectedYear}
             label="السنة"
-            onChange={(e) => onYearChange(Number(e.target.value))}
+            onChange={handleYearChange}
           >
             {years.map((year) => (
               <MenuItem key={year} value={year}>
@@ -90,7 +94,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
             labelId="month-select-label"
             value={selectedMonth}
             label="الشهر"
-            onChange={(e) => onMonthChange(Number(e.target.value))}
+            onChange={handleMonthChange}
           >
             {months.map((month) => (
               <MenuItem key={month.value} value={month.value}>

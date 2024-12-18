@@ -149,12 +149,42 @@ export default function Analytics() {
   };
 
   const formatCurrency = (amount: number) => {
-    return amount.toLocaleString('ar-SA', {
-      style: 'currency',
-      currency: 'SAR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
+    try {
+      return new Intl.NumberFormat('ar-SA', {
+        style: 'currency',
+        currency: 'SAR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    } catch (error) {
+      console.error('Error formatting currency:', error);
+      return `${amount.toFixed(0)} ر.س`;
+    }
+  };
+
+  const formatPercentage = (value: number) => {
+    try {
+      return new Intl.NumberFormat('ar-SA', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      }).format(value / 100);
+    } catch (error) {
+      console.error('Error formatting percentage:', error);
+      return `${value.toFixed(1)}%`;
+    }
+  };
+
+  const formatNumber = (value: number) => {
+    try {
+      return new Intl.NumberFormat('ar-SA', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 1
+      }).format(value);
+    } catch (error) {
+      console.error('Error formatting number:', error);
+      return value.toFixed(1);
+    }
   };
 
   useEffect(() => {
@@ -163,38 +193,67 @@ export default function Analytics() {
         const bookingsRef = collection(db, COLLECTIONS.BOOKINGS);
         const expensesRef = collection(db, COLLECTIONS.EXPENSES);
         
-        let bookingsQuery = bookingsRef;
-        let expensesQuery = expensesRef;
+        let bookingsQuery = query(bookingsRef, where('year', '==', year));
+        let expensesQuery = query(expensesRef, where('year', '==', year));
 
         if (selectedMonth !== 'كل الأشهر') {
-          const startOfMonth = new Date(year, parseInt(selectedMonth) - 1, 1);
-          const endOfMonth = new Date(year, parseInt(selectedMonth), 0);
-          
+          const month = parseInt(selectedMonth);
           bookingsQuery = query(
             bookingsRef,
-            where('checkIn', '>=', startOfMonth),
-            where('checkIn', '<=', endOfMonth)
+            where('year', '==', year),
+            where('month', '==', month)
           );
           
           expensesQuery = query(
             expensesRef,
-            where('date', '>=', startOfMonth),
-            where('date', '<=', endOfMonth)
+            where('year', '==', year),
+            where('month', '==', month)
           );
         }
+
+        console.log('Fetching data for year:', year, 'month:', selectedMonth);
 
         const [bookingsSnapshot, expensesSnapshot] = await Promise.all([
           getDocs(bookingsQuery),
           getDocs(expensesQuery)
         ]);
 
+        console.log('Found bookings:', bookingsSnapshot.docs.length);
+        console.log('Found expenses:', expensesSnapshot.docs.length);
+
         const bookings = bookingsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         const expenses = expensesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // Calculate basic metrics
-        const totalRevenue = bookings.reduce((sum: number, booking: any) => sum + (booking.amount || 0), 0);
-        const totalExpenses = expenses.reduce((sum: number, expense: any) => sum + (expense.amount || 0), 0);
+        const totalRevenue = bookings.reduce((sum: number, booking: any) => {
+          const amount = parseFloat(booking.amount) || 0;
+          return sum + amount;
+        }, 0);
+
+        const totalExpenses = expenses.reduce((sum: number, expense: any) => {
+          const amount = parseFloat(expense.amount) || 0;
+          return sum + amount;
+        }, 0);
+
         const netIncome = totalRevenue - totalExpenses;
+        const totalBookings = bookings.length;
+
+        // Calculate average booking duration
+        const totalDuration = bookings.reduce((sum: number, booking: any) => {
+          const checkIn = booking.checkIn ? new Date(booking.checkIn) : null;
+          const checkOut = booking.checkOut ? new Date(booking.checkOut) : null;
+          if (checkIn && checkOut) {
+            const duration = (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24);
+            return sum + (duration > 0 ? duration : 0);
+          }
+          return sum;
+        }, 0);
+
+        const averageBookingDuration = totalBookings > 0 ? totalDuration / totalBookings : 0;
+
+        // Calculate occupancy rate
+        const daysInPeriod = selectedMonth === 'كل الأشهر' ? 365 : new Date(year, parseInt(selectedMonth), 0).getDate();
+        const occupancyRate = Math.min((totalDuration / daysInPeriod) * 100, 100); // Cap at 100%
 
         // Calculate booking types
         const bookingTypeMap = new Map<string, { count: number; revenue: number }>();
@@ -202,9 +261,10 @@ export default function Analytics() {
         bookings.forEach((booking: any) => {
           const bookingType = booking.bookingType || 'حجز عادي';
           const currentStats = bookingTypeMap.get(bookingType) || { count: 0, revenue: 0 };
+          const amount = parseFloat(booking.amount) || 0;
           bookingTypeMap.set(bookingType, {
             count: currentStats.count + 1,
-            revenue: currentStats.revenue + (booking.amount || 0)
+            revenue: currentStats.revenue + amount
           });
         });
 
@@ -214,63 +274,82 @@ export default function Analytics() {
           revenue: stats.revenue
         }));
 
-        // Ensure we have default booking types even if there's no data
-        if (bookingTypes.length === 0) {
-          bookingTypes.push(
-            { type: 'حجز عادي', count: 0, revenue: 0 },
-            { type: 'حجز مميز', count: 0, revenue: 0 },
-            { type: 'حجز طويل المدى', count: 0, revenue: 0 }
-          );
-        }
-
         // Create monthly financial summary data
         const monthlyData = [];
         if (selectedMonth === 'كل الأشهر') {
-          // Group data by month for the entire year
-          const monthlyBookings = new Map();
-          const monthlyExpenses = new Map();
+          // Create a map to store monthly data
+          const monthlyStats = new Map();
+          
+          // Initialize all months with zero values
+          for (let i = 0; i < 12; i++) {
+            monthlyStats.set(i, { revenue: 0, expenses: 0, bookings: 0 });
+          }
 
+          // Group bookings by month
           bookings.forEach((booking: any) => {
-            const date = new Date(booking.checkIn);
-            const monthKey = date.getMonth();
-            const currentAmount = monthlyBookings.get(monthKey) || 0;
-            monthlyBookings.set(monthKey, currentAmount + (booking.amount || 0));
+            const month = booking.month - 1; // Convert to 0-based index
+            const stats = monthlyStats.get(month);
+            if (stats) {
+              stats.revenue += parseFloat(booking.amount) || 0;
+              stats.bookings += 1;
+            }
           });
 
+          // Group expenses by month
           expenses.forEach((expense: any) => {
-            const date = new Date(expense.date);
-            const monthKey = date.getMonth();
-            const currentAmount = monthlyExpenses.get(monthKey) || 0;
-            monthlyExpenses.set(monthKey, currentAmount + (expense.amount || 0));
+            const month = expense.month - 1; // Convert to 0-based index
+            const stats = monthlyStats.get(month);
+            if (stats) {
+              stats.expenses += parseFloat(expense.amount) || 0;
+            }
           });
 
-          // Create data for all months
+          // Convert map to array for chart
           for (let month = 0; month < 12; month++) {
-            const monthRevenue = monthlyBookings.get(month) || 0;
-            const monthExpenses = monthlyExpenses.get(month) || 0;
+            const stats = monthlyStats.get(month);
             monthlyData.push({
               name: months[month + 1].label,
-              revenue: monthRevenue,
-              expenses: monthExpenses,
-              netIncome: monthRevenue - monthExpenses
+              revenue: stats.revenue,
+              expenses: stats.expenses,
+              netIncome: stats.revenue - stats.expenses,
+              bookings: stats.bookings
             });
           }
         } else {
-          // Only show data for selected month
           monthlyData.push({
             name: months[parseInt(selectedMonth)].label,
             revenue: totalRevenue,
             expenses: totalExpenses,
-            netIncome: netIncome
+            netIncome: netIncome,
+            bookings: totalBookings
           });
         }
+
+        // Calculate averages
+        const averageBookingAmount = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+        const averageExpensePerDay = expenses.length > 0 ? totalExpenses / daysInPeriod : 0;
+
+        console.log('Setting data:', {
+          totalRevenue,
+          totalExpenses,
+          totalBookings,
+          netIncome,
+          occupancyRate,
+          averageBookingDuration,
+          averageBookingAmount,
+          averageExpensePerDay
+        });
 
         setData(prevData => ({
           ...prevData,
           totalRevenue,
           totalExpenses,
-          totalBookings: bookings.length,
+          totalBookings,
           netIncome,
+          occupancyRate,
+          averageBookingDuration,
+          averageBookingAmount,
+          averageExpensePerDay,
           bookingTypes,
           bookingTrends: monthlyData
         }));
@@ -361,7 +440,7 @@ export default function Analytics() {
               <TimelineIcon sx={{ mr: 1 }} />
               <Typography variant="h6">نسبة الإشغال</Typography>
             </Box>
-            <Typography variant="h4">{data.occupancyRate.toFixed(1)}%</Typography>
+            <Typography variant="h4">{formatPercentage(data.occupancyRate)}</Typography>
           </StyledPaper>
         </Grid>
         <Grid item xs={12} md={3}>
@@ -370,7 +449,7 @@ export default function Analytics() {
               <CalendarTodayIcon sx={{ mr: 1 }} />
               <Typography variant="h6">متوسط مدة الإقامة</Typography>
             </Box>
-            <Typography variant="h4">{data.averageBookingDuration.toFixed(1)} يوم</Typography>
+            <Typography variant="h4">{formatNumber(data.averageBookingDuration)} يوم</Typography>
           </StyledPaper>
         </Grid>
         <Grid item xs={12} md={3}>
@@ -379,7 +458,7 @@ export default function Analytics() {
               <ShowChartIcon sx={{ mr: 1 }} />
               <Typography variant="h6">متوسط الإيراد للحجز</Typography>
             </Box>
-            <Typography variant="h4">{formatCurrency(data.averageRevenuePerBooking)}</Typography>
+            <Typography variant="h4">{formatCurrency(data.averageBookingAmount)}</Typography>
           </StyledPaper>
         </Grid>
         <Grid item xs={12} md={3}>
@@ -505,7 +584,7 @@ export default function Analytics() {
                       }} 
                     />
                     <Typography variant="body2">
-                      {type.type} ({((type.count / (data.totalBookings || 1)) * 100).toFixed(1)}%)
+                      {type.type} ({formatPercentage((type.count / (data.totalBookings || 1)) * 100)})
                     </Typography>
                   </Box>
                 ))}

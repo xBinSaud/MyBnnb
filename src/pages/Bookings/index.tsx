@@ -195,13 +195,25 @@ export default function Bookings() {
     }
   };
 
+  const handleMonthChange = (newMonth: number) => {
+    navigate(`/bookings/${year}/${newMonth}`);
+    refetch();
+  };
+
+  const handleYearChange = (newYear: number) => {
+    navigate(`/bookings/${newYear}/${month}`);
+    refetch();
+  };
+
   return (
     <Box sx={{ width: '100%' }}>
       <MonthSelector
-        selectedYear={year}
-        selectedMonth={month}
+        selectedYear={Number(year)}
+        selectedMonth={Number(month)}
         bookings={bookings}
         expenses={expenses}
+        onMonthChange={handleMonthChange}
+        onYearChange={handleYearChange}
       />
       
       <Box sx={{ 
