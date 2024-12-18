@@ -2,7 +2,6 @@ import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Av
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import BookIcon from '@mui/icons-material/Book';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -33,12 +32,6 @@ export default function Layout({ children }: LayoutProps) {
       icon: <BookIcon />, 
       path: '/bookings',
       isActive: (path: string) => path.startsWith('/bookings')
-    },
-    { 
-      text: t('calendar.title'), 
-      icon: <CalendarMonthIcon />, 
-      path: '/calendar',
-      isActive: (path: string) => path.startsWith('/calendar')
     },
     { 
       text: t('analytics.title'), 

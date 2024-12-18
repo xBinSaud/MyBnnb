@@ -8,7 +8,6 @@ import { initReactI18next } from 'react-i18next';
 import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Bookings from './pages/Bookings';
-import Calendar from './pages/Calendar';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
 import Apartments from './pages/Apartments';
@@ -36,7 +35,6 @@ function AppRoutes() {
       <Route path="/dashboard/:year/:month" element={<Dashboard />} />
       <Route path="/bookings/:year/:month" element={<Bookings />} />
       <Route path="/bookings" element={<BookingsByMonth />} />
-      <Route path="/calendar" element={<Calendar />} />
       <Route path="/analytics" element={<Analytics />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/apartments" element={<Apartments />} />
