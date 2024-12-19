@@ -1,6 +1,6 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAnalytics } from 'firebase/analytics';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDpIBGp1arPK5pGkXmVp9PKTw_SahF5UM4",
@@ -9,7 +9,7 @@ const firebaseConfig = {
   storageBucket: "mybnb-10b27.appspot.com",
   messagingSenderId: "412168445058",
   appId: "1:412168445058:web:de59004d4f93aca2dae89b",
-  measurementId: "G-MZDHEZDXP2"
+  measurementId: "G-MZDHEZDXP2",
 };
 
 // Initialize Firebase
@@ -19,19 +19,20 @@ export const analytics = getAnalytics(app);
 
 // Collections
 export const COLLECTIONS = {
-  APARTMENTS: 'apartments',
-  BOOKINGS: 'bookings',
-  BOOKING_DATES: 'bookingDates',
-  RECEIPTS: 'receipts',
-  APP_SETTINGS: 'appSettings',
-  EXPENSES: 'expenses',
+  APARTMENTS: "apartments",
+  BOOKINGS: "bookings",
+  BOOKING_DATES: "bookingDates",
+  RECEIPTS: "receipts",
+  APP_SETTINGS: "appSettings",
+  EXPENSES: "expenses",
 } as const;
 
 export interface Expense {
   id: string;
   description: string;
   amount: number;
-  date: Date;
+  date: Date | { toDate: () => Date }; // Allow both Date and Firestore timestamp
+  receiptUrl?: string; // Add this line to include receiptUrl
   receiptImage?: string;
   year: number;
   month: number;
@@ -42,7 +43,10 @@ export interface Expense {
 export interface Apartment {
   id: string;
   name: string;
+  description: string;
   pricePerNight: number;
+  amenities: string[]; // Add this line to include amenities
+  images: string[]; // Add this line to include images
   location?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -69,12 +73,12 @@ export interface Booking {
   apartmentId: string;
   clientName: string;
   phoneNumber: string;
-  checkIn: Date;
-  checkOut: Date;
+  checkIn?: Date;
+  checkOut?: Date;
   amount: number;
   receiptImage?: string;
-  status: 'active' | 'cancelled';
-  bookingSource: 'airbnb' | 'booking' | 'cash' | 'other';
+  status: "active" | "cancelled";
+  bookingSource: "airbnb" | "booking" | "cash" | "other";
   year: number;
   month: number;
   createdAt: Date;
@@ -85,8 +89,8 @@ export interface BookingDate {
   id: string;
   apartmentId: string;
   bookingId: string;
-  date: Date;
-  status: 'booked' | 'checkout' | 'checkin';
+  date: Date | { toDate: () => Date }; // Allow both Date and Firestore timestamp
+  status: "booked" | "checkout" | "checkin";
 }
 
 export interface Receipt {

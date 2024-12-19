@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -8,15 +8,14 @@ import {
   TableRow,
   Paper,
   IconButton,
-  Box,
   Typography,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { format, differenceInDays } from 'date-fns';
-import { arSA } from 'date-fns/locale';
-import type { Booking } from '../config/firebase';
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { format, differenceInDays } from "date-fns";
+import { arSA } from "date-fns/locale";
+import type { Booking } from "../config/firebase";
 
 interface BookingsTableProps {
   bookings: Booking[];
@@ -32,12 +31,16 @@ export const BookingsTable: React.FC<BookingsTableProps> = ({
   onViewImage,
 }) => {
   const calculateTotalAmount = (booking: Booking) => {
-    const days = differenceInDays(new Date(booking.checkOut), new Date(booking.checkIn)) + 1;
+    const days =
+      differenceInDays(
+        new Date(booking.checkOut || new Date()),
+        new Date(booking.checkIn || new Date())
+      ) + 1;
     return days * booking.amount;
   };
 
   return (
-    <TableContainer component={Paper} sx={{ width: '100%' }}>
+    <TableContainer component={Paper} sx={{ width: "100%" }}>
       <Table sx={{ minWidth: 800 }}>
         <TableHead>
           <TableRow>
@@ -54,17 +57,33 @@ export const BookingsTable: React.FC<BookingsTableProps> = ({
         </TableHead>
         <TableBody>
           {bookings.map((booking) => {
-            const days = differenceInDays(new Date(booking.checkOut), new Date(booking.checkIn)) + 1;
+            const days =
+              differenceInDays(
+                new Date(booking.checkOut || new Date()),
+                new Date(booking.checkIn || new Date())
+              ) + 1;
             const totalAmount = calculateTotalAmount(booking);
-            
+
             return (
               <TableRow key={booking.id}>
                 <TableCell>{booking.clientName}</TableCell>
                 <TableCell>
-                  {format(new Date(booking.checkIn), 'dd/MM/yyyy', { locale: arSA })}
+                  {format(
+                    new Date(booking.checkIn || new Date()),
+                    "dd/MM/yyyy",
+                    {
+                      locale: arSA,
+                    }
+                  )}
                 </TableCell>
                 <TableCell>
-                  {format(new Date(booking.checkOut), 'dd/MM/yyyy', { locale: arSA })}
+                  {format(
+                    new Date(booking.checkOut || new Date()),
+                    "dd/MM/yyyy",
+                    {
+                      locale: arSA,
+                    }
+                  )}
                 </TableCell>
                 <TableCell>{booking.amount} ريال</TableCell>
                 <TableCell>{days} يوم</TableCell>
@@ -76,7 +95,9 @@ export const BookingsTable: React.FC<BookingsTableProps> = ({
                 <TableCell>{booking.bookingSource}</TableCell>
                 <TableCell>
                   {booking.receiptImage && (
-                    <IconButton onClick={() => onViewImage(booking.receiptImage!)}>
+                    <IconButton
+                      onClick={() => onViewImage(booking.receiptImage!)}
+                    >
                       <VisibilityIcon />
                     </IconButton>
                   )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   Table,
   TableBody,
@@ -9,13 +9,13 @@ import {
   Paper,
   IconButton,
   Box,
-} from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { format } from 'date-fns';
-import { arSA } from 'date-fns/locale';
-import type { Expense } from '../config/firebase';
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import { format } from "date-fns";
+import { arSA } from "date-fns/locale";
+import type { Expense } from "../config/firebase";
 
 interface ExpensesTableProps {
   expenses: Expense[];
@@ -31,7 +31,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
   onViewImage,
 }) => {
   return (
-    <TableContainer component={Paper} sx={{ width: '100%' }}>
+    <TableContainer component={Paper} sx={{ width: "100%" }}>
       <Table sx={{ minWidth: 800 }}>
         <TableHead>
           <TableRow>
@@ -47,12 +47,17 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
             <TableRow key={expense.id}>
               <TableCell>{expense.description}</TableCell>
               <TableCell>
-                {expense.date instanceof Date 
-                  ? format(expense.date, 'dd/MM/yyyy', { locale: arSA })
-                  : expense.date?.toDate 
-                    ? format(expense.date.toDate(), 'dd/MM/yyyy', { locale: arSA })
-                    : format(new Date(expense.date), 'dd/MM/yyyy', { locale: arSA })
-                }
+                {expense.date instanceof Date
+                  ? format(expense.date, "dd/MM/yyyy", { locale: arSA })
+                  : expense.date &&
+                    typeof expense.date === "object" &&
+                    "toDate" in expense.date
+                  ? format(expense.date.toDate(), "dd/MM/yyyy", {
+                      locale: arSA,
+                    })
+                  : format(new Date(expense.date), "dd/MM/yyyy", {
+                      locale: arSA,
+                    })}
               </TableCell>
               <TableCell>{expense.amount} ريال</TableCell>
               <TableCell align="center">
@@ -60,29 +65,31 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                   <IconButton
                     size="small"
                     onClick={() => onViewImage(expense.receiptImage!)}
-                    sx={{ color: 'primary.main' }}
+                    sx={{ color: "primary.main" }}
                   >
                     <VisibilityIcon />
                   </IconButton>
                 ) : (
-                  '-'
+                  "-"
                 )}
               </TableCell>
               <TableCell>
-                <Box sx={{ 
-                  display: 'flex', 
-                  gap: 1,
-                  justifyContent: 'flex-end' // Align buttons to the right
-                }}>
-                  <IconButton 
-                    size="small" 
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1,
+                    justifyContent: "flex-end", // Align buttons to the right
+                  }}
+                >
+                  <IconButton
+                    size="small"
                     onClick={() => onEdit(expense)}
-                    sx={{ 
-                      color: 'primary.main',
-                      '&:hover': {
-                        backgroundColor: 'primary.light',
-                        color: 'primary.dark'
-                      }
+                    sx={{
+                      color: "primary.main",
+                      "&:hover": {
+                        backgroundColor: "primary.light",
+                        color: "primary.dark",
+                      },
                     }}
                   >
                     <EditIcon />
@@ -90,12 +97,12 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                   <IconButton
                     size="small"
                     onClick={() => onDelete(expense.id)}
-                    sx={{ 
-                      color: 'error.main',
-                      '&:hover': {
-                        backgroundColor: 'error.light',
-                        color: 'error.dark'
-                      }
+                    sx={{
+                      color: "error.main",
+                      "&:hover": {
+                        backgroundColor: "error.light",
+                        color: "error.dark",
+                      },
                     }}
                   >
                     <DeleteIcon />

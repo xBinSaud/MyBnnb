@@ -1,14 +1,13 @@
-import { Button } from '@mui/material';
-import { createTestData } from '../utils/testData';
+import { Button } from "@mui/material";
 
 export const TestDataGenerator = () => {
   const handleGenerateData = async () => {
-    const success = await createTestData();
-    if (success) {
-      alert('تم إنشاء البيانات التجريبية بنجاح');
-    } else {
-      alert('حدث خطأ أثناء إنشاء البيانات التجريبية');
-    }
+    // const success = await createTestData();
+    // if (success) {
+    //   alert('تم إنشاء البيانات التجريبية بنجاح');
+    // } else {
+    //   alert('حدث خطأ أثناء إنشاء البيانات التجريبية');
+    // }
   };
 
   return (

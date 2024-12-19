@@ -1,19 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
-  updateDoc, 
+import { useState, useEffect, useCallback } from "react";
+import {
+  collection,
+  query,
+  orderBy,
+  addDoc,
+  updateDoc,
   deleteDoc,
-  doc, 
-  Timestamp, 
-  where, 
-  getDocs 
-} from 'firebase/firestore';
-import { db, COLLECTIONS, Booking } from '../config/firebase';
-import { startOfMonth, endOfMonth } from 'date-fns';
+  doc,
+  Timestamp,
+  where,
+  getDocs,
+} from "firebase/firestore";
+import { db, COLLECTIONS, Booking } from "../config/firebase";
 
 export function useBookings(year?: string, month?: string) {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -24,30 +22,38 @@ export function useBookings(year?: string, month?: string) {
     try {
       setLoading(true);
       const bookingsRef = collection(db, COLLECTIONS.BOOKINGS);
-      let q = query(bookingsRef, orderBy('createdAt', 'desc'));
-      
+      let q = query(bookingsRef, orderBy("createdAt", "desc"));
+
       if (year && month) {
         q = query(
           bookingsRef,
-          where('year', '==', parseInt(year)),
-          where('month', '==', parseInt(month)),
-          orderBy('createdAt', 'desc')
+          where("year", "==", parseInt(year)),
+          where("month", "==", parseInt(month)),
+          orderBy("createdAt", "desc")
         );
       }
 
       const snapshot = await getDocs(q);
-      const bookingsData = snapshot.docs.map(doc => {
+      const bookingsData = snapshot.docs.map((doc) => {
         const data = doc.data();
         return {
           id: doc.id,
           ...data,
-          checkIn: data.checkIn?.toDate ? data.checkIn.toDate() : new Date(data.checkIn),
-          checkOut: data.checkOut?.toDate ? data.checkOut.toDate() : new Date(data.checkOut),
-          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
-          updatedAt: data.updatedAt?.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt),
+          checkIn: data.checkIn?.toDate
+            ? data.checkIn.toDate()
+            : new Date(data.checkIn),
+          checkOut: data.checkOut?.toDate
+            ? data.checkOut.toDate()
+            : new Date(data.checkOut),
+          createdAt: data.createdAt?.toDate
+            ? data.createdAt.toDate()
+            : new Date(data.createdAt),
+          updatedAt: data.updatedAt?.toDate
+            ? data.updatedAt.toDate()
+            : new Date(data.updatedAt),
         } as Booking;
       });
-      
+
       setBookings(bookingsData);
       setError(null);
     } catch (err) {
@@ -61,25 +67,27 @@ export function useBookings(year?: string, month?: string) {
     fetchBookings();
   }, [fetchBookings]);
 
-  const addBooking = async (bookingData: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addBooking = async (
+    bookingData: Omit<Booking, "id" | "createdAt" | "updatedAt">
+  ) => {
     try {
       const now = Timestamp.now();
       await addDoc(collection(db, COLLECTIONS.BOOKINGS), {
         ...bookingData,
         createdAt: now,
         updatedAt: now,
-        checkIn: Timestamp.fromDate(bookingData.checkIn),
-        checkOut: Timestamp.fromDate(bookingData.checkOut),
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
       });
     } catch (err) {
-      console.error('Error adding booking:', err);
-      throw new Error('حدث خطأ أثناء إضافة الحجز');
+      console.error("Error adding booking:", err);
+      throw new Error("حدث خطأ أثناء إضافة الحجز");
     }
   };
 
   const updateBooking = async (
     bookingId: string,
-    bookingData: Partial<Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>>
+    bookingData: Partial<Omit<Booking, "id" | "createdAt" | "updatedAt">>
   ) => {
     try {
       const bookingRef = doc(db, COLLECTIONS.BOOKINGS, bookingId);
@@ -89,16 +97,16 @@ export function useBookings(year?: string, month?: string) {
       };
 
       if (bookingData.checkIn) {
-        updateData.checkIn = Timestamp.fromDate(bookingData.checkIn);
+        updateData.checkIn = bookingData.checkIn;
       }
       if (bookingData.checkOut) {
-        updateData.checkOut = Timestamp.fromDate(bookingData.checkOut);
+        updateData.checkOut = bookingData.checkOut;
       }
 
       await updateDoc(bookingRef, updateData);
     } catch (err) {
-      console.error('Error updating booking:', err);
-      throw new Error('حدث خطأ أثناء تحديث الحجز');
+      console.error("Error updating booking:", err);
+      throw new Error("حدث خطأ أثناء تحديث الحجز");
     }
   };
 
@@ -107,8 +115,8 @@ export function useBookings(year?: string, month?: string) {
       const bookingRef = doc(db, COLLECTIONS.BOOKINGS, bookingId);
       await deleteDoc(bookingRef);
     } catch (err) {
-      console.error('Error deleting booking:', err);
-      throw new Error('حدث خطأ أثناء حذف الحجز');
+      console.error("Error deleting booking:", err);
+      throw new Error("حدث خطأ أثناء حذف الحجز");
     }
   };
 
@@ -121,4 +129,4 @@ export function useBookings(year?: string, month?: string) {
     updateBooking,
     deleteBooking,
   };
-};
+}

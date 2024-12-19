@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Box,
   Typography,
@@ -20,34 +20,48 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-} from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import HotelIcon from '@mui/icons-material/Hotel';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db, COLLECTIONS, Expense, Booking } from '../../config/firebase';
-import { AddExpenseDialog } from '../../components/AddExpenseDialog';
-import { AddBookingDialog } from '../../components/AddBookingDialog';
-import { format } from 'date-fns';
-import { arSA } from 'date-fns/locale';
+} from "@mui/material";
+import { useTranslation } from "react-i18next";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import HotelIcon from "@mui/icons-material/Hotel";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
+import { db, COLLECTIONS, Expense, Booking } from "../../config/firebase";
+import { AddExpenseDialog } from "../../components/AddExpenseDialog";
+import { AddBookingDialog } from "../../components/AddBookingDialog";
+import { format } from "date-fns";
+import { BookingsTable } from "../../components/BookingsTable";
+import { MonthSelector } from "../../components/MonthSelector";
 
 export default function Dashboard() {
-  const { year = new Date().getFullYear().toString(), month = (new Date().getMonth() + 1).toString() } = useParams();
+  const {
+    year = new Date().getFullYear().toString(),
+    month = (new Date().getMonth() + 1).toString(),
+  } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  
+
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading] = useState(true);
   const [bookingsLoading, setBookingsLoading] = useState(true);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
-  const [selectedExpenseImage, setSelectedExpenseImage] = useState<string | null>(null);
+  const [selectedExpenseImage, setSelectedExpenseImage] = useState<
+    string | null
+  >(null);
 
   const handleMonthSelect = (selectedYear: string, selectedMonth: string) => {
     navigate(`/dashboard/${selectedYear}/${selectedMonth}`);
@@ -57,7 +71,7 @@ export default function Dashboard() {
     try {
       const expensesRef = collection(db, COLLECTIONS.EXPENSES);
       const expensesSnapshot = await getDocs(expensesRef);
-      const expensesData = expensesSnapshot.docs.map(doc => ({
+      const expensesData = expensesSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         date: doc.data().date.toDate(),
@@ -66,8 +80,8 @@ export default function Dashboard() {
       })) as Expense[];
       setExpenses(expensesData);
     } catch (error) {
-      console.error('Error fetching expenses:', error);
-      alert('حدث خطأ أثناء تحميل المصروفات');
+      console.error("Error fetching expenses:", error);
+      alert("حدث خطأ أثناء تحميل المصروفات");
     }
   };
 
@@ -81,21 +95,24 @@ export default function Dashboard() {
       const bookingsRef = collection(db, COLLECTIONS.BOOKINGS);
       const q = query(
         bookingsRef,
-        where('year', '==', parseInt(year)),
-        where('month', '==', parseInt(month))
+        where("year", "==", parseInt(year)),
+        where("month", "==", parseInt(month))
       );
       const querySnapshot = await getDocs(q);
-      const bookingsData = querySnapshot.docs.map(doc => ({
+      const bookingsData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
         checkIn: doc.data().checkIn?.toDate() || new Date(doc.data().checkIn),
-        checkOut: doc.data().checkOut?.toDate() || new Date(doc.data().checkOut),
-        createdAt: doc.data().createdAt?.toDate() || new Date(doc.data().createdAt),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(doc.data().updatedAt)
+        checkOut:
+          doc.data().checkOut?.toDate() || new Date(doc.data().checkOut),
+        createdAt:
+          doc.data().createdAt?.toDate() || new Date(doc.data().createdAt),
+        updatedAt:
+          doc.data().updatedAt?.toDate() || new Date(doc.data().updatedAt),
       })) as Booking[];
       setBookings(bookingsData);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      console.error("Error fetching bookings:", error);
     } finally {
       setBookingsLoading(false);
     }
@@ -131,13 +148,13 @@ export default function Dashboard() {
       await fetchExpenses();
       setIsAddExpenseOpen(false);
     } catch (error) {
-      console.error('Error adding expense:', error);
-      alert('حدث خطأ أثناء إضافة المصروف');
+      console.error("Error adding expense:", error);
+      alert("حدث خطأ أثناء إضافة المصروف");
       throw error;
     }
   };
 
-  const handleAddBooking = async (bookingData: Omit<Booking, 'id'>) => {
+  const handleAddBooking = async (bookingData: Omit<Booking, "id"> | any) => {
     try {
       const bookingRef = collection(db, COLLECTIONS.BOOKINGS);
       await addDoc(bookingRef, {
@@ -145,12 +162,12 @@ export default function Dashboard() {
         year: parseInt(year),
         month: parseInt(month),
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
       fetchBookings();
       setIsAddBookingOpen(false);
     } catch (error) {
-      console.error('Error adding booking:', error);
+      console.error("Error adding booking:", error);
     }
   };
 
@@ -167,53 +184,67 @@ export default function Dashboard() {
       await deleteDoc(doc(db, COLLECTIONS.EXPENSES, id));
       await fetchExpenses();
     } catch (error) {
-      console.error('Error deleting expense:', error);
+      console.error("Error deleting expense:", error);
     }
   };
 
-  const handleEditExpense = async (expense: Expense) => {
+  const handleEditExpense = async (_: Expense) => {
     try {
       await fetchExpenses();
     } catch (error) {
-      console.error('Error editing expense:', error);
+      console.error("Error editing expense:", error);
     }
   };
 
   // Calculate statistics
-  const totalRevenue = bookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
+  const totalRevenue = bookings.reduce(
+    (sum, booking) => sum + (booking.amount || 0),
+    0
+  );
   const totalBookings = bookings.length;
-  const averageBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+  const averageBookingValue =
+    totalBookings > 0 ? totalRevenue / totalBookings : 0;
   const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
   const occupancyRate = (totalBookings / daysInMonth) * 100;
 
-  const StatCard = ({ title, value, icon, color }: { title: string; value: string | number; icon: React.ReactNode; color: string }) => (
-    <Paper 
-      sx={{ 
+  const StatCard = ({
+    title,
+    value,
+    icon,
+    color,
+  }: {
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    color: string;
+  }) => (
+    <Paper
+      sx={{
         p: 3,
-        display: 'flex',
-        flexDirection: 'column',
+        display: "flex",
+        flexDirection: "column",
         height: 160,
-        position: 'relative',
-        overflow: 'hidden'
+        position: "relative",
+        overflow: "hidden",
       }}
     >
       <Box
         sx={{
-          position: 'absolute',
+          position: "absolute",
           top: -10,
           right: -10,
           backgroundColor: `${color}15`,
-          borderRadius: '50%',
+          borderRadius: "50%",
           width: 80,
           height: 80,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          '& > svg': {
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          "& > svg": {
             fontSize: 40,
             color: color,
             opacity: 0.7,
-          }
+          },
         }}
       >
         {icon}
@@ -224,18 +255,18 @@ export default function Dashboard() {
       <Typography component="p" variant="h4" sx={{ mt: 2, mb: 1 }}>
         {value}
       </Typography>
-      <Box sx={{ width: '100%', mt: 'auto' }}>
-        <LinearProgress 
-          variant="determinate" 
-          value={70} 
-          sx={{ 
-            height: 6, 
+      <Box sx={{ width: "100%", mt: "auto" }}>
+        <LinearProgress
+          variant="determinate"
+          value={70}
+          sx={{
+            height: 6,
             borderRadius: 3,
             backgroundColor: `${color}15`,
-            '& .MuiLinearProgress-bar': {
+            "& .MuiLinearProgress-bar": {
               backgroundColor: color,
-            }
-          }} 
+            },
+          }}
         />
       </Box>
     </Paper>
@@ -243,20 +274,29 @@ export default function Dashboard() {
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
-        <Typography 
-          variant="h4" 
-          sx={{ 
-            fontWeight: 'bold',
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        <Typography
+          variant="h4"
+          sx={{
+            fontWeight: "bold",
           }}
         >
-          {t('dashboard.title')}
+          {t("dashboard.title")}
         </Typography>
         <MonthSelector
-          selectedMonth={month}
-          selectedYear={year}
-          onMonthChange={(month) => handleMonthSelect(year, month)}
-          onYearChange={(year) => handleMonthSelect(year, month)}
+          selectedMonth={Number(month)}
+          selectedYear={Number(year)}
+          onMonthChange={(month) => handleMonthSelect(year, String(month))}
+          onYearChange={(year) => handleMonthSelect(String(year), month)}
+          bookings={[]}
+          expenses={[]}
         />
       </Box>
 
@@ -264,15 +304,15 @@ export default function Dashboard() {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title={t('dashboard.totalRevenue')}
-            value={`${totalRevenue.toLocaleString('ar-SA')} ر.س`}
+            title={t("dashboard.totalRevenue")}
+            value={`${totalRevenue.toLocaleString("ar-SA")} ر.س`}
             icon={<AttachMoneyIcon />}
             color="#2196f3"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title={t('dashboard.totalBookings')}
+            title={t("dashboard.totalBookings")}
             value={totalBookings}
             icon={<TrendingUpIcon />}
             color="#00bcd4"
@@ -280,15 +320,15 @@ export default function Dashboard() {
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title={t('dashboard.averageBooking')}
-            value={`${averageBookingValue.toLocaleString('ar-SA')} ر.س`}
+            title={t("dashboard.averageBooking")}
+            value={`${averageBookingValue.toLocaleString("ar-SA")} ر.س`}
             icon={<HotelIcon />}
             color="#4caf50"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title={t('dashboard.occupancyRate')}
+            title={t("dashboard.occupancyRate")}
             value={`${occupancyRate.toFixed(1)}%`}
             icon={<CalendarTodayIcon />}
             color="#f50057"
@@ -298,24 +338,26 @@ export default function Dashboard() {
 
       {/* Expenses Section */}
       <Box sx={{ mt: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          mb: 2 
-        }}>
-          <Typography variant="h6">{t('dashboard.expenses')}</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Typography variant="h6">{t("dashboard.expenses")}</Typography>
           <Button
             variant="contained"
             onClick={() => setIsAddExpenseOpen(true)}
             sx={{
-              backgroundColor: '#4caf50',
-              '&:hover': {
-                backgroundColor: '#388e3c',
+              backgroundColor: "#4caf50",
+              "&:hover": {
+                backgroundColor: "#388e3c",
               },
             }}
           >
-            {t('dashboard.addExpense')}
+            {t("dashboard.addExpense")}
           </Button>
         </Box>
 
@@ -328,7 +370,7 @@ export default function Dashboard() {
         />
 
         {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <CircularProgress />
           </Box>
         ) : (
@@ -345,22 +387,23 @@ export default function Dashboard() {
               </TableHead>
               <TableBody>
                 {expenses
-                  .filter(expense => 
-                    expense.year === parseInt(year) && 
-                    expense.month === parseInt(month)
+                  .filter(
+                    (expense) =>
+                      expense.year === parseInt(year) &&
+                      expense.month === parseInt(month)
                   )
                   .map((expense) => (
                     <TableRow key={expense.id}>
                       <TableCell>
                         <Stack direction="row" spacing={1}>
-                          <IconButton 
-                            size="small" 
+                          <IconButton
+                            size="small"
                             onClick={() => handleDeleteExpense(expense.id)}
-                            sx={{ color: 'error.main' }}
+                            sx={{ color: "error.main" }}
                           >
                             <DeleteIcon />
                           </IconButton>
-                          <IconButton 
+                          <IconButton
                             size="small"
                             onClick={() => handleEditExpense(expense)}
                           >
@@ -369,16 +412,24 @@ export default function Dashboard() {
                           {expense.receiptImage && (
                             <IconButton
                               size="small"
-                              onClick={() => handleViewReceipt(expense.receiptImage!)}
+                              onClick={() =>
+                                handleViewReceipt(expense.receiptImage!)
+                              }
                             >
                               <VisibilityIcon />
                             </IconButton>
                           )}
                         </Stack>
                       </TableCell>
-                      <TableCell>{expense.receiptImage ? 'نعم' : 'لا'}</TableCell>
+                      <TableCell>
+                        {expense.receiptImage ? "نعم" : "لا"}
+                      </TableCell>
                       <TableCell>{expense.amount} ريال</TableCell>
-                      <TableCell>{format(expense.date, 'dd/MM/yyyy')}</TableCell>
+                      <TableCell>
+                        {expense.date instanceof Date
+                          ? format(expense.date, "dd/MM/yyyy")
+                          : format(expense.date.toDate(), "dd/MM/yyyy")}
+                      </TableCell>
                       <TableCell>{expense.description}</TableCell>
                     </TableRow>
                   ))}
@@ -398,14 +449,14 @@ export default function Dashboard() {
         <DialogTitle>معاينة الإيصال</DialogTitle>
         <DialogContent>
           {selectedExpenseImage && (
-            <Box sx={{ textAlign: 'center', mt: 2 }}>
+            <Box sx={{ textAlign: "center", mt: 2 }}>
               <img
                 src={selectedExpenseImage}
                 alt="Receipt"
                 style={{
-                  maxWidth: '100%',
-                  maxHeight: '70vh',
-                  objectFit: 'contain'
+                  maxWidth: "100%",
+                  maxHeight: "70vh",
+                  objectFit: "contain",
                 }}
               />
             </Box>
@@ -418,24 +469,26 @@ export default function Dashboard() {
 
       {/* Bookings Section */}
       <Box sx={{ mt: 4 }}>
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          mb: 2 
-        }}>
-          <Typography variant="h6">{t('dashboard.bookings')}</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
+          <Typography variant="h6">{t("dashboard.bookings")}</Typography>
           <Button
             variant="contained"
             onClick={() => setIsAddBookingOpen(true)}
             sx={{
-              backgroundColor: '#2196f3',
-              '&:hover': {
-                backgroundColor: '#1976d2',
+              backgroundColor: "#2196f3",
+              "&:hover": {
+                backgroundColor: "#1976d2",
               },
             }}
           >
-            {t('dashboard.addBooking')}
+            {t("dashboard.addBooking")}
           </Button>
         </Box>
 
@@ -443,12 +496,12 @@ export default function Dashboard() {
           open={isAddBookingOpen}
           onClose={() => setIsAddBookingOpen(false)}
           onSubmit={handleAddBooking}
-          selectedMonth={parseInt(month)}
-          selectedYear={parseInt(year)}
+          selectedMonth={String(parseInt(month))}
+          selectedYear={String(parseInt(year))}
         />
 
         {bookingsLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
             <CircularProgress />
           </Box>
         ) : (
@@ -456,6 +509,9 @@ export default function Dashboard() {
             bookings={bookings}
             onDelete={() => fetchBookings()}
             onEdit={() => fetchBookings()}
+            onViewImage={function (_: string): void {
+              throw new Error("Function not implemented.");
+            }}
           />
         )}
       </Box>

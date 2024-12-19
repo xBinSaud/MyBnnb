@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,14 +9,13 @@ import {
   Box,
   Stack,
   Alert,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { arSA } from 'date-fns/locale';
-import { isAfter, differenceInDays } from 'date-fns';
-import type { Booking } from '../config/firebase';
-import { useBookingDates } from '../hooks/useBookingDates';
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { isAfter } from "date-fns";
+import type { Booking } from "../config/firebase";
+import { useBookingDates } from "../hooks/useBookingDates";
 
 interface EditBookingDialogProps {
   open: boolean;
@@ -31,15 +30,15 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   booking,
   onSubmit,
 }) => {
-  const [clientName, setClientName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [clientName, setClientName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [checkIn, setCheckIn] = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
-  const [dateError, setDateError] = useState<string>('');
+  const [dateError, setDateError] = useState<string>("");
 
-  const { bookedDates, isDateBooked, areAllDatesAvailable } = useBookingDates({
-    apartmentId: booking?.apartmentId || '',
+  const { isDateBooked, areAllDatesAvailable } = useBookingDates({
+    apartmentId: booking?.apartmentId || "",
     startDate: new Date(),
     endDate: new Date(new Date().setMonth(new Date().getMonth() + 6)),
     excludeBookingId: booking?.id,
@@ -47,10 +46,18 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
 
   useEffect(() => {
     if (booking) {
-      setClientName(booking.clientName || '');
-      setPhoneNumber(booking.phoneNumber || '');
-      setCheckIn(booking.checkIn instanceof Date ? booking.checkIn : new Date(booking.checkIn));
-      setCheckOut(booking.checkOut instanceof Date ? booking.checkOut : new Date(booking.checkOut));
+      setClientName(booking.clientName || "");
+      setPhoneNumber(booking.phoneNumber || "");
+      setCheckIn(
+        booking.checkIn instanceof Date
+          ? booking.checkIn
+          : new Date(booking.checkIn || new Date())
+      );
+      setCheckOut(
+        booking.checkOut instanceof Date
+          ? booking.checkOut
+          : new Date(booking.checkOut || new Date())
+      );
       setTotalAmount(booking.amount || 0);
     }
   }, [booking]);
@@ -59,47 +66,49 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   useEffect(() => {
     if (checkIn && checkOut) {
       if (!isAfter(checkOut, checkIn)) {
-        setDateError('تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول');
+        setDateError("تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول");
       } else if (!areAllDatesAvailable(checkIn, checkOut)) {
-        setDateError('بعض التواريخ المختارة محجوزة مسبقاً');
+        setDateError("بعض التواريخ المختارة محجوزة مسبقاً");
       } else {
-        setDateError('');
+        setDateError("");
       }
     } else {
-      setDateError('');
+      setDateError("");
     }
   }, [checkIn, checkOut, areAllDatesAvailable]);
 
   const handleSubmit = async () => {
-    if (!booking || !checkIn || !checkOut || !clientName || !phoneNumber) return;
+    if (!booking || !checkIn || !checkOut || !clientName || !phoneNumber)
+      return;
     if (dateError) return;
 
     try {
       await onSubmit(booking.id, {
         clientName,
         phoneNumber,
-        checkIn: checkIn.toISOString(),
-        checkOut: checkOut.toISOString(),
+        checkIn: checkIn,
+        checkOut: checkOut,
         amount: totalAmount,
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date(),
       });
       onClose();
     } catch (error) {
-      console.error('Error updating booking:', error);
-      alert('حدث خطأ أثناء تحديث الحجز');
+      console.error("Error updating booking:", error);
+      alert("حدث خطأ أثناء تحديث الحجز");
     }
   };
 
-  const isSubmitDisabled = !checkIn || !checkOut || !clientName || !phoneNumber || !!dateError;
+  const isSubmitDisabled =
+    !checkIn || !checkOut || !clientName || !phoneNumber || !!dateError;
 
   if (!booking) return null;
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} locale={arSA}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle>تعديل الحجز</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
             <TextField
               label="اسم العميل"
               value={clientName}
@@ -115,7 +124,11 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
               required
             />
 
-            <Stack spacing={2} direction={{ xs: 'column', sm: 'row' }} sx={{ width: '100%' }}>
+            <Stack
+              spacing={2}
+              direction={{ xs: "column", sm: "row" }}
+              sx={{ width: "100%" }}
+            >
               <DatePicker
                 label="تاريخ الوصول"
                 value={checkIn}
@@ -156,7 +169,7 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
               value={totalAmount}
               onChange={(e) => {
                 const value = e.target.value;
-                const numericValue = value.replace(/[^0-9]/g, '');
+                const numericValue = value.replace(/[^0-9]/g, "");
                 setTotalAmount(Number(numericValue));
               }}
               type="number"

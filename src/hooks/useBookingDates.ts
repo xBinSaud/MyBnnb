@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db, COLLECTIONS, type BookingDate } from '../config/firebase';
-import { startOfDay, endOfDay, eachDayOfInterval } from 'date-fns';
+import { useState, useEffect } from "react";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db, COLLECTIONS, type BookingDate } from "../config/firebase";
+import { startOfDay, endOfDay, eachDayOfInterval } from "date-fns";
 
 interface UseBookingDatesProps {
   apartmentId?: string;
   startDate?: Date;
   endDate?: Date;
+  excludeBookingId?: string; // Add this line
 }
 
-export const useBookingDates = ({ apartmentId, startDate, endDate }: UseBookingDatesProps) => {
+export const useBookingDates = ({
+  apartmentId,
+  startDate,
+  endDate,
+}: UseBookingDatesProps) => {
   const [bookedDates, setBookedDates] = useState<Date[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,17 +29,22 @@ export const useBookingDates = ({ apartmentId, startDate, endDate }: UseBookingD
       try {
         const q = query(
           collection(db, COLLECTIONS.BOOKING_DATES),
-          where('apartmentId', '==', apartmentId),
-          where('date', '>=', startOfDay(startDate)),
-          where('date', '<=', endOfDay(endDate))
+          where("apartmentId", "==", apartmentId),
+          where("date", ">=", startOfDay(startDate)),
+          where("date", "<=", endOfDay(endDate))
         );
 
         const querySnapshot = await getDocs(q);
-        const dates = querySnapshot.docs.map(doc => (doc.data() as BookingDate).date.toDate());
+        const dates = querySnapshot.docs.map((doc) => {
+          const bookingDate = doc.data() as BookingDate;
+          return bookingDate.date instanceof Date
+            ? bookingDate.date
+            : bookingDate.date.toDate();
+        });
         setBookedDates(dates);
       } catch (err) {
-        console.error('Error fetching booked dates:', err);
-        setError('حدث خطأ أثناء جلب التواريخ المحجوزة');
+        console.error("Error fetching booked dates:", err);
+        setError("حدث خطأ أثناء جلب التواريخ المحجوزة");
       } finally {
         setLoading(false);
       }
@@ -44,8 +54,9 @@ export const useBookingDates = ({ apartmentId, startDate, endDate }: UseBookingD
   }, [apartmentId, startDate, endDate]);
 
   const isDateBooked = (date: Date) => {
-    return bookedDates.some(bookedDate => 
-      startOfDay(bookedDate).getTime() === startOfDay(date).getTime()
+    return bookedDates.some(
+      (bookedDate) =>
+        startOfDay(bookedDate).getTime() === startOfDay(date).getTime()
     );
   };
 
@@ -59,6 +70,6 @@ export const useBookingDates = ({ apartmentId, startDate, endDate }: UseBookingD
     loading,
     error,
     isDateBooked,
-    areAllDatesAvailable
+    areAllDatesAvailable,
   };
 };

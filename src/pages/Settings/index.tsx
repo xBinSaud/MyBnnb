@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -16,13 +16,21 @@ import {
   FormControlLabel,
   Tabs,
   Tab,
-} from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, setDoc } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../../config/firebase';
-import type { Apartment, AppSettings } from '../../config/firebase';
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  getDoc,
+  setDoc,
+} from "firebase/firestore";
+import { db, COLLECTIONS } from "../../config/firebase";
+import type { Apartment, AppSettings } from "../../config/firebase";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -46,22 +54,24 @@ function TabPanel(props: TabPanelProps) {
 }
 
 export default function Settings() {
-  const { t } = useTranslation();
   const [tabValue, setTabValue] = useState(0);
   const [apartments, setApartments] = useState<Apartment[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [apartmentName, setApartmentName] = useState('');
+  const [apartmentName, setApartmentName] = useState("");
 
   // Load apartments
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, COLLECTIONS.APARTMENTS), (snapshot) => {
-      const apartmentsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Apartment[];
-      setApartments(apartmentsData);
-    });
+    const unsubscribe = onSnapshot(
+      collection(db, COLLECTIONS.APARTMENTS),
+      (snapshot) => {
+        const apartmentsData = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Apartment[];
+        setApartments(apartmentsData);
+      }
+    );
 
     return () => unsubscribe();
   }, []);
@@ -69,17 +79,17 @@ export default function Settings() {
   // Load settings
   useEffect(() => {
     const loadSettings = async () => {
-      const settingsRef = doc(db, COLLECTIONS.APP_SETTINGS, 'default');
+      const settingsRef = doc(db, COLLECTIONS.APP_SETTINGS, "default");
       const settingsDoc = await getDoc(settingsRef);
-      
+
       if (settingsDoc.exists()) {
         setSettings(settingsDoc.data() as AppSettings);
       } else {
         // Create default settings if they don't exist
-        const defaultSettings: Omit<AppSettings, 'id'> = {
+        const defaultSettings: Omit<AppSettings, "id"> = {
           theme: {
-            primaryColor: '#4F6F8F',
-            secondaryColor: '#78909C',
+            primaryColor: "#4F6F8F",
+            secondaryColor: "#78909C",
             darkMode: true,
           },
           notifications: {
@@ -90,54 +100,54 @@ export default function Settings() {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        
+
         await setDoc(settingsRef, defaultSettings);
-        setSettings({ id: 'default', ...defaultSettings });
+        setSettings({ id: "default", ...defaultSettings });
       }
     };
-    
+
     loadSettings();
   }, []);
 
   const handleSaveSettings = async () => {
     if (!settings) return;
-    
+
     try {
-      const settingsRef = doc(db, COLLECTIONS.APP_SETTINGS, 'default');
+      const settingsRef = doc(db, COLLECTIONS.APP_SETTINGS, "default");
       await updateDoc(settingsRef, {
         ...settings,
         updatedAt: new Date(),
       });
     } catch (error) {
-      console.error('Error saving settings:', error);
-      alert('حدث خطأ أثناء حفظ الإعدادات');
+      console.error("Error saving settings:", error);
+      alert("حدث خطأ أثناء حفظ الإعدادات");
     }
   };
 
   const handleAddApartment = async () => {
     if (!apartmentName.trim()) return;
-    
+
     try {
       await addDoc(collection(db, COLLECTIONS.APARTMENTS), {
         name: apartmentName,
         createdAt: new Date(),
         updatedAt: new Date(),
       });
-      setApartmentName('');
+      setApartmentName("");
       setOpenDialog(false);
     } catch (error) {
-      console.error('Error adding apartment:', error);
-      alert('حدث خطأ أثناء إضافة الشقة');
+      console.error("Error adding apartment:", error);
+      alert("حدث خطأ أثناء إضافة الشقة");
     }
   };
 
   const handleDeleteApartment = async (apartmentId: string) => {
-    if (window.confirm('هل أنت متأكد من حذف هذه الشقة؟')) {
+    if (window.confirm("هل أنت متأكد من حذف هذه الشقة؟")) {
       try {
         await deleteDoc(doc(db, COLLECTIONS.APARTMENTS, apartmentId));
       } catch (error) {
-        console.error('Error deleting apartment:', error);
-        alert('حدث خطأ أثناء حذف الشقة');
+        console.error("Error deleting apartment:", error);
+        alert("حدث خطأ أثناء حذف الشقة");
       }
     }
   };
@@ -148,8 +158,11 @@ export default function Settings() {
         الإعدادات
       </Typography>
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={tabValue}
+          onChange={(_, newValue) => setTabValue(newValue)}
+        >
           <Tab label="الشقق" />
           <Tab label="الإشعارات" />
           <Tab label="المظهر" />
@@ -158,7 +171,12 @@ export default function Settings() {
 
       {/* Apartments Tab */}
       <TabPanel value={tabValue} index={0}>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={3}
+        >
           <Typography variant="h6">إدارة الشقق</Typography>
           <Button
             variant="contained"
@@ -174,7 +192,11 @@ export default function Settings() {
             <Grid item xs={12} sm={6} md={4} key={apartment.id}>
               <Card>
                 <CardContent>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                  <Box
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                  >
                     <Typography variant="h6">{apartment.name}</Typography>
                     <IconButton
                       size="small"
@@ -279,7 +301,10 @@ export default function Settings() {
                       settings
                         ? {
                             ...settings,
-                            theme: { ...settings.theme, darkMode: e.target.checked },
+                            theme: {
+                              ...settings.theme,
+                              darkMode: e.target.checked,
+                            },
                           }
                         : null
                     )
@@ -294,13 +319,16 @@ export default function Settings() {
               fullWidth
               label="اللون الرئيسي"
               type="color"
-              value={settings?.theme.primaryColor || '#4F6F8F'}
+              value={settings?.theme.primaryColor || "#4F6F8F"}
               onChange={(e) =>
                 setSettings(
                   settings
                     ? {
                         ...settings,
-                        theme: { ...settings.theme, primaryColor: e.target.value },
+                        theme: {
+                          ...settings.theme,
+                          primaryColor: e.target.value,
+                        },
                       }
                     : null
                 )
@@ -312,13 +340,16 @@ export default function Settings() {
               fullWidth
               label="اللون الثانوي"
               type="color"
-              value={settings?.theme.secondaryColor || '#78909C'}
+              value={settings?.theme.secondaryColor || "#78909C"}
               onChange={(e) =>
                 setSettings(
                   settings
                     ? {
                         ...settings,
-                        theme: { ...settings.theme, secondaryColor: e.target.value },
+                        theme: {
+                          ...settings.theme,
+                          secondaryColor: e.target.value,
+                        },
                       }
                     : null
                 )
@@ -331,7 +362,11 @@ export default function Settings() {
       {/* Save Button */}
       {tabValue > 0 && (
         <Box mt={3} display="flex" justifyContent="flex-end">
-          <Button variant="contained" color="primary" onClick={handleSaveSettings}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleSaveSettings}
+          >
             حفظ التغييرات
           </Button>
         </Box>
@@ -352,7 +387,11 @@ export default function Settings() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>إلغاء</Button>
-          <Button onClick={handleAddApartment} variant="contained" color="primary">
+          <Button
+            onClick={handleAddApartment}
+            variant="contained"
+            color="primary"
+          >
             إضافة
           </Button>
         </DialogActions>

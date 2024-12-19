@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,10 +10,10 @@ import {
   Chip,
   IconButton,
   InputAdornment,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import { useApartments } from '../hooks/useApartments';
-import { uploadImage } from '../config/cloudinary';
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { useApartments } from "../hooks/useApartments";
+import { uploadImage } from "../config/cloudinary";
 
 interface AddApartmentDialogProps {
   open: boolean;
@@ -25,11 +25,11 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
   onClose,
 }) => {
   const { addApartment } = useApartments();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [pricePerNight, setPricePerNight] = useState('');
-  const [newAmenity, setNewAmenity] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [pricePerNight, setPricePerNight] = useState("");
+  const [newAmenity, setNewAmenity] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -37,15 +37,17 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
   const handleAddAmenity = () => {
     if (newAmenity.trim()) {
       setAmenities([...amenities, newAmenity.trim()]);
-      setNewAmenity('');
+      setNewAmenity("");
     }
   };
 
   const handleDeleteAmenity = (amenityToDelete: string) => {
-    setAmenities(amenities.filter(amenity => amenity !== amenityToDelete));
+    setAmenities(amenities.filter((amenity) => amenity !== amenityToDelete));
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files[0]) {
       try {
         setUploading(true);
@@ -53,7 +55,7 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
         const imageUrl = await uploadImage(file);
         setImages([...images, imageUrl]);
       } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error("Error uploading image:", error);
       } finally {
         setUploading(false);
       }
@@ -67,29 +69,32 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
         description,
         location,
         pricePerNight: Number(pricePerNight),
-        amenities,
-        images,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        amenities, // Add this line
+        images, // Add this line
       });
       onClose();
       // Reset form
-      setName('');
-      setDescription('');
-      setLocation('');
-      setPricePerNight('');
+      setName("");
+      setDescription("");
+      setLocation("");
+      setPricePerNight("");
       setAmenities([]);
       setImages([]);
     } catch (error) {
-      console.error('Error adding apartment:', error);
+      console.error("Error adding apartment:", error);
     }
   };
 
-  const isSubmitDisabled = !name || !location || !pricePerNight || amenities.length === 0;
+  const isSubmitDisabled =
+    !name || !location || !pricePerNight || amenities.length === 0;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>إضافة شقة جديدة</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
           <TextField
             label="اسم الشقة"
             value={name}
@@ -117,7 +122,7 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
             value={pricePerNight}
             onChange={(e) => {
               const value = e.target.value;
-              const numericValue = value.replace(/[^0-9]/g, '');
+              const numericValue = value.replace(/[^0-9]/g, "");
               setPricePerNight(numericValue);
             }}
             type="number"
@@ -134,7 +139,7 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
               value={newAmenity}
               onChange={(e) => setNewAmenity(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddAmenity();
                 }
@@ -150,7 +155,7 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
                 ),
               }}
             />
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
               {amenities.map((amenity) => (
                 <Chip
                   key={amenity}
@@ -164,7 +169,7 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
           <Box>
             <input
               accept="image/*"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               id="add-apartment-image"
               type="file"
               onChange={handleImageUpload}
@@ -177,10 +182,10 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
                 disabled={uploading}
                 fullWidth
               >
-                {uploading ? 'جاري الرفع...' : 'إضافة صورة'}
+                {uploading ? "جاري الرفع..." : "إضافة صورة"}
               </Button>
             </label>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
               {images.map((image, index) => (
                 <Box
                   key={index}
@@ -191,7 +196,7 @@ export const AddApartmentDialog: React.FC<AddApartmentDialogProps> = ({
                     width: 100,
                     height: 100,
                     borderRadius: 1,
-                    objectFit: 'cover',
+                    objectFit: "cover",
                   }}
                 />
               ))}

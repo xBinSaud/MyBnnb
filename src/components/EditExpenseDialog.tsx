@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -8,14 +8,13 @@ import {
   TextField,
   Box,
   Typography,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { uploadImage } from '../config/cloudinary';
-import type { Expense } from '../config/firebase';
-import { arSA } from 'date-fns/locale';
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { uploadImage } from "../config/cloudinary";
+import type { Expense } from "../config/firebase";
 
 interface EditExpenseDialogProps {
   open: boolean;
@@ -34,8 +33,8 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
   selectedMonth,
   selectedYear,
 }) => {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [receipt, setReceipt] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,9 +42,15 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
 
   useEffect(() => {
     if (expense) {
-      setDescription(expense.description || '');
-      setAmount(expense.amount?.toString() || '');
-      setDate(expense.date instanceof Date ? expense.date : new Date(expense.date));
+      setDescription(expense.description || "");
+      setAmount(expense.amount?.toString() || "");
+      setDate(
+        expense.date instanceof Date
+          ? expense.date
+          : "toDate" in expense.date
+          ? expense.date.toDate() // Call toDate() if it's a Firestore timestamp
+          : new Date(expense.date) // Fallback to creating a new Date if it's a string
+      );
     }
   }, [expense]);
 
@@ -57,15 +62,19 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
 
   const isDateInSelectedMonth = (date: Date | null) => {
     if (!date) return false;
-    return date.getMonth() + 1 === parseInt(selectedMonth) && date.getFullYear() === parseInt(selectedYear);
+    return (
+      date.getMonth() + 1 === parseInt(selectedMonth) &&
+      date.getFullYear() === parseInt(selectedYear)
+    );
   };
 
   const handleDateChange = (newValue: Date | null) => {
     if (newValue && !isDateInSelectedMonth(newValue)) {
-      alert('يجب أن يكون التاريخ في نفس الشهر المحدد');
+      alert("يجب أن يكون التاريخ في نفس الشهر المحدد");
       return;
     }
-    setDate(newValue);
+    if (newValue) setDate(newValue);
+    else setDate(new Date());
   };
 
   const handleSubmit = async () => {
@@ -74,7 +83,7 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
     setLoading(true);
     try {
       let receiptUrl = expense.receiptUrl;
-      
+
       if (receipt) {
         setUploadProgress(true);
         receiptUrl = await uploadImage(receipt);
@@ -91,8 +100,8 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
       });
       onClose();
     } catch (error) {
-      console.error('Error updating expense:', error);
-      alert('حدث خطأ أثناء تحديث المصروف');
+      console.error("Error updating expense:", error);
+      alert("حدث خطأ أثناء تحديث المصروف");
     } finally {
       setLoading(false);
     }
@@ -101,11 +110,11 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
   if (!expense) return null;
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns} locale={arSA}>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
         <DialogTitle>تعديل المصروف</DialogTitle>
         <DialogContent>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
             <TextField
               label="الوصف"
               value={description}
@@ -128,8 +137,8 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
               slotProps={{
                 textField: {
                   fullWidth: true,
-                  required: true
-                }
+                  required: true,
+                },
               }}
             />
             <Box>
@@ -137,7 +146,7 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 id="receipt-upload"
               />
               <label htmlFor="receipt-upload">
@@ -152,7 +161,7 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
               </label>
               {(receipt || expense.receiptUrl) && (
                 <Typography variant="caption" sx={{ ml: 2 }}>
-                  {receipt ? receipt.name : 'تم رفع الإيصال مسبقاً'}
+                  {receipt ? receipt.name : "تم رفع الإيصال مسبقاً"}
                 </Typography>
               )}
             </Box>
@@ -162,12 +171,14 @@ export const EditExpenseDialog: React.FC<EditExpenseDialogProps> = ({
           <Button onClick={onClose} disabled={loading || uploadProgress}>
             إلغاء
           </Button>
-          <Button 
-            onClick={handleSubmit} 
-            variant="contained" 
-            disabled={loading || uploadProgress || !description || !amount || !date}
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={
+              loading || uploadProgress || !description || !amount || !date
+            }
           >
-            {loading ? 'جاري الحفظ...' : 'حفظ التغييرات'}
+            {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
           </Button>
         </DialogActions>
       </Dialog>
