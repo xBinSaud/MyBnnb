@@ -1,7 +1,6 @@
 import { Box, Drawer, List, ListItem, ListItemIcon, ListItemText, Typography, Avatar, IconButton } from '@mui/material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import BookIcon from '@mui/icons-material/Book';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -21,12 +20,6 @@ export default function Layout({ children }: LayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const menuItems = [
-    { 
-      text: t('dashboard.title'), 
-      icon: <DashboardIcon />, 
-      path: '/', 
-      isActive: (path: string) => path === '/' || path.startsWith('/dashboard')
-    },
     { 
       text: t('bookings.title'), 
       icon: <BookIcon />, 

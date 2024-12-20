@@ -31,7 +31,7 @@ i18n.use(initReactI18next).init({
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
+      <Route path="/" element={<BookingsByMonth />} />
       <Route path="/dashboard/:year/:month" element={<Dashboard />} />
       <Route path="/bookings/:year/:month" element={<Bookings />} />
       <Route path="/bookings" element={<BookingsByMonth />} />
