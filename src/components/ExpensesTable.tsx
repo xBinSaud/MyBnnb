@@ -15,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { format } from "date-fns";
 import { arSA } from "date-fns/locale";
-import type { Expense } from "../config/firebase";
+import type { Expense } from "../types";
 
 interface ExpensesTableProps {
   expenses: Expense[];
@@ -30,6 +30,16 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
   onDelete,
   onViewImage,
 }) => {
+  const formatDate = (date: Date | string | { toDate: () => Date }) => {
+    if (date instanceof Date) {
+      return format(date, "dd/MM/yyyy", { locale: arSA });
+    }
+    if (typeof date === "object" && "toDate" in date) {
+      return format(date.toDate(), "dd/MM/yyyy", { locale: arSA });
+    }
+    return format(new Date(date), "dd/MM/yyyy", { locale: arSA });
+  };
+
   return (
     <TableContainer component={Paper} sx={{ width: "100%" }}>
       <Table sx={{ minWidth: 800 }}>
@@ -46,19 +56,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
           {expenses.map((expense) => (
             <TableRow key={expense.id}>
               <TableCell>{expense.description}</TableCell>
-              <TableCell>
-                {expense.date instanceof Date
-                  ? format(expense.date, "dd/MM/yyyy", { locale: arSA })
-                  : expense.date &&
-                    typeof expense.date === "object" &&
-                    "toDate" in expense.date
-                  ? format(expense.date.toDate(), "dd/MM/yyyy", {
-                      locale: arSA,
-                    })
-                  : format(new Date(expense.date), "dd/MM/yyyy", {
-                      locale: arSA,
-                    })}
-              </TableCell>
+              <TableCell>{formatDate(expense.date)}</TableCell>
               <TableCell>{expense.amount} ريال</TableCell>
               <TableCell align="center">
                 {expense.receiptImage ? (
@@ -78,7 +76,7 @@ export const ExpensesTable: React.FC<ExpensesTableProps> = ({
                   sx={{
                     display: "flex",
                     gap: 1,
-                    justifyContent: "flex-end", // Align buttons to the right
+                    justifyContent: "flex-end",
                   }}
                 >
                   <IconButton

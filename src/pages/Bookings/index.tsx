@@ -20,7 +20,7 @@ import { AddBookingDialog } from "../../components/AddBookingDialog";
 import { EditBookingDialog } from "../../components/EditBookingDialog";
 import { AddExpenseDialog } from "../../components/AddExpenseDialog";
 import { EditExpenseDialog } from "../../components/EditExpenseDialog";
-import type { Booking, Expense } from "../../config/firebase";
+import type { Booking, Expense } from "../../types";
 import { useExpenses } from "../../hooks/useExpenses";
 import { db } from "../../config/firebase";
 import {
