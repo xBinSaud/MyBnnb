@@ -41,7 +41,7 @@ import {
 import { db, COLLECTIONS, Expense, Booking } from "../../config/firebase";
 import { AddExpenseDialog } from "../../components/AddExpenseDialog";
 import { AddBookingDialog } from "../../components/AddBookingDialog";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { BookingsTable } from "../../components/BookingsTable";
 import { MonthSelector } from "../../components/MonthSelector";
 
@@ -208,8 +208,22 @@ export default function Dashboard() {
   const totalBookings = bookings.length;
   const averageBookingValue =
     totalBookings > 0 ? totalRevenue / totalBookings : 0;
+
+  const calculateTotalBookingDays = (bookings: Booking[]) => {
+    return bookings.reduce((sum, booking) => {
+      if (!booking.checkIn || !booking.checkOut) return sum;
+      const days = differenceInDays(
+        new Date(booking.checkOut),
+        new Date(booking.checkIn)
+      );
+      return sum + days;
+    }, 0);
+  };
+
+  const totalBookingDays = calculateTotalBookingDays(bookings);
+  const averageBookingDuration = totalBookings > 0 ? totalBookingDays / totalBookings : 0;
   const daysInMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
-  const occupancyRate = (totalBookings / daysInMonth) * 100;
+  const occupancyRate = (totalBookingDays / daysInMonth) * 100;
 
   const StatCard = ({
     title,
@@ -307,24 +321,16 @@ export default function Dashboard() {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title={t("dashboard.totalRevenue")}
-            value={`${totalRevenue.toLocaleString("ar-SA")} ر.س`}
-            icon={<AttachMoneyIcon />}
-            color="#2196f3"
+            title={t("dashboard.totalBookingDays")}
+            value={totalBookingDays}
+            icon={<CalendarTodayIcon />}
+            color="#f50057"
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
-            title={t("dashboard.totalBookings")}
-            value={totalBookings}
-            icon={<TrendingUpIcon />}
-            color="#00bcd4"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title={t("dashboard.averageBooking")}
-            value={`${averageBookingValue.toLocaleString("ar-SA")} ر.س`}
+            title={t("dashboard.averageBookingDuration")}
+            value={`${averageBookingDuration.toFixed(1)} ${t("common.days")}`}
             icon={<HotelIcon />}
             color="#4caf50"
           />
@@ -334,7 +340,15 @@ export default function Dashboard() {
             title={t("dashboard.occupancyRate")}
             value={`${occupancyRate.toFixed(1)}%`}
             icon={<CalendarTodayIcon />}
-            color="#f50057"
+            color="#00bcd4"
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard
+            title={t("dashboard.totalRevenue")}
+            value={`${totalRevenue.toLocaleString("ar-SA")} ر.س`}
+            icon={<AttachMoneyIcon />}
+            color="#2196f3"
           />
         </Grid>
       </Grid>

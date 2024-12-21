@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import type { Booking, Expense } from "../config/firebase";
+import { differenceInDays } from "date-fns";
 
 interface MonthSelectorProps {
   selectedYear: number;
@@ -51,12 +52,10 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
   // Calculate statistics
   const totalBookings = bookings.length;
   const totalBookingAmount = bookings.reduce((sum, booking) => {
-    const days =
-      Math.ceil(
-        (new Date(booking.checkOut || new Date()).getTime() -
-          new Date(booking.checkIn || new Date()).getTime()) /
-          (1000 * 60 * 60 * 24)
-      ) + 1;
+    const days = differenceInDays(
+      new Date(booking.checkOut || new Date()),
+      new Date(booking.checkIn || new Date())
+    );
     return sum + booking.amount * days;
   }, 0);
   const totalExpenses = expenses.reduce(

@@ -18,7 +18,8 @@ const toFirestoreTimestamp = (date: Date): Timestamp => {
 
 const calculateTotalAmount = (booking: Booking): number => {
   if (!booking.amount || !booking.checkIn || !booking.checkOut) return 0;
-  const days = differenceInDays(toDate(booking.checkOut), toDate(booking.checkIn)) + 1;
+  // نطرح 1 لعدم احتساب يوم الخروج
+  const days = differenceInDays(toDate(booking.checkOut), toDate(booking.checkIn));
   return days * booking.amount;
 };
 
@@ -127,7 +128,7 @@ export async function calculateMonthlyStatistics(
     // حساب إجمالي أيام الحجوزات
     const totalBookingDays = monthlyBookings.reduce((sum, booking) => {
       if (!booking.checkIn || !booking.checkOut) return sum;
-      const duration = differenceInDays(toDate(booking.checkOut), toDate(booking.checkIn)) + 1;
+      const duration = differenceInDays(toDate(booking.checkOut), toDate(booking.checkIn));
       return sum + duration;
     }, 0);
 

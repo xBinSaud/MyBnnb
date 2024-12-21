@@ -31,11 +31,10 @@ export const BookingsTable: React.FC<BookingsTableProps> = ({
   onViewImage,
 }) => {
   const calculateTotalAmount = (booking: Booking) => {
-    const days =
-      differenceInDays(
-        new Date(booking.checkOut || new Date()),
-        new Date(booking.checkIn || new Date())
-      ) + 1;
+    const days = differenceInDays(
+      new Date(booking.checkOut || new Date()),
+      new Date(booking.checkIn || new Date())
+    );
     return days * booking.amount;
   };
 
@@ -57,11 +56,10 @@ export const BookingsTable: React.FC<BookingsTableProps> = ({
         </TableHead>
         <TableBody>
           {bookings.map((booking) => {
-            const days =
-              differenceInDays(
-                new Date(booking.checkOut || new Date()),
-                new Date(booking.checkIn || new Date())
-              ) + 1;
+            const days = differenceInDays(
+              new Date(booking.checkOut || new Date()),
+              new Date(booking.checkIn || new Date())
+            );
             const totalAmount = calculateTotalAmount(booking);
 
             return (
