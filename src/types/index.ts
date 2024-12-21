@@ -18,6 +18,7 @@ export interface Booking {
   checkIn?: Date;
   checkOut?: Date;
   amount: number;
+  dailyRate: number;
   receiptImage?: string;
   status: "active" | "cancelled";
   bookingSource: "airbnb" | "booking" | "cash" | "other";

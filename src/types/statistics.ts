@@ -1,12 +1,29 @@
 export interface MonthlyStats {
-  month: number;
+  totalBookings: number;
   totalRevenue: number;
   totalExpenses: number;
   netIncome: number;
   profitMargin: number;
-  totalBookings: number;
   bookingsBySource: { [key: string]: number };
-  averageBookingAmount: number;
+  totalDailyRates: number;
+  occupancyRate: number;
+  averageBookingDuration: number;
+  averageRevenuePerBooking: number;
+  averageDailyRevenue: number;
+  totalBookingDays: number;
+  revenueGrowth: number;
+  expenseGrowth: number;
+}
+
+export interface YearlyTotals {
+  totalBookings: number;
+  totalRevenue: number;
+  totalExpenses: number;
+  netIncome: number;
+  totalDailyRates: number;
+  bookingsBySource: { [key: string]: number };
+  profitMargin: number;
+  occupancyRate: number;
 }
 
 export interface BookingStats {
@@ -14,6 +31,7 @@ export interface BookingStats {
   occupancyRate: number;
   averageStayDuration: number;
   bookingsBySource: { [key: string]: number };
+  totalRevenue?: number;
 }
 
 export interface FinancialStats {
@@ -21,11 +39,11 @@ export interface FinancialStats {
   totalExpenses: number;
   netIncome: number;
   profitMargin: number;
+  expensesByMonth: { [key: string]: number };
 }
 
 export interface Statistics {
-  lastUpdated: string;
-  bookings: BookingStats;
-  financials: FinancialStats;
   monthlyBreakdown: MonthlyStats[];
+  yearlyTotals: MonthlyStats;
+  year: number;
 }
