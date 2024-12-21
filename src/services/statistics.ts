@@ -18,9 +18,30 @@ const toFirestoreTimestamp = (date: Date): Timestamp => {
 
 const calculateTotalAmount = (booking: Booking): number => {
   if (!booking.amount || !booking.checkIn || !booking.checkOut) return 0;
-  // نطرح 1 لعدم احتساب يوم الخروج
-  const days = differenceInDays(toDate(booking.checkOut), toDate(booking.checkIn));
-  return days * booking.amount;
+
+  const checkIn = toDate(booking.checkIn);
+  const checkOut = toDate(booking.checkOut);
+  
+  // إذا كان الحجز في نفس الشهر، نحسب جميع الأيام بما فيها يوم الخروج
+  if (!booking.isPartial) {
+    const days = differenceInDays(checkOut, checkIn) + 1;
+    return days * booking.amount;
+  }
+  
+  // إذا كان الحجز مقسم بين شهرين
+  if (booking.isPartial) {
+    if (booking.partialType === 'first') {
+      // للشهر الأول نحسب جميع الأيام بما فيها يوم الخروج لأنه آخر يوم في الشهر
+      const days = differenceInDays(checkOut, checkIn) + 1;
+      return days * booking.amount;
+    } else {
+      // للشهر الثاني لا نحسب يوم الخروج
+      const days = differenceInDays(checkOut, checkIn);
+      return days * booking.amount;
+    }
+  }
+
+  return 0;
 };
 
 export async function calculateBookingStatistics(bookings: Booking[]): Promise<BookingStats> {

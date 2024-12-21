@@ -37,6 +37,7 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  Timestamp,
 } from "firebase/firestore";
 import { db, COLLECTIONS, Expense, Booking } from "../../config/firebase";
 import { AddExpenseDialog } from "../../components/AddExpenseDialog";
@@ -93,23 +94,30 @@ export default function Dashboard() {
     try {
       setBookingsLoading(true);
       const bookingsRef = collection(db, COLLECTIONS.BOOKINGS);
-      const q = query(
-        bookingsRef,
-        where("year", "==", parseInt(year)),
-        where("month", "==", parseInt(month))
-      );
-      const querySnapshot = await getDocs(q);
-      const bookingsData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        checkIn: doc.data().checkIn?.toDate() || new Date(doc.data().checkIn),
-        checkOut:
-          doc.data().checkOut?.toDate() || new Date(doc.data().checkOut),
-        createdAt:
-          doc.data().createdAt?.toDate() || new Date(doc.data().createdAt),
-        updatedAt:
-          doc.data().updatedAt?.toDate() || new Date(doc.data().updatedAt),
-      })) as Booking[];
+      const querySnapshot = await getDocs(bookingsRef);
+      
+      // تحديد بداية ونهاية الشهر المحدد
+      const startOfSelectedMonth = new Date(parseInt(year), parseInt(month) - 1, 1);
+      const endOfSelectedMonth = new Date(parseInt(year), parseInt(month), 0);
+
+      // تصفية الحجوزات التي تتداخل مع الشهر المحدد
+      const bookingsData = querySnapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          checkIn: doc.data().checkIn?.toDate() || new Date(doc.data().checkIn),
+          checkOut: doc.data().checkOut?.toDate() || new Date(doc.data().checkOut),
+          createdAt: doc.data().createdAt?.toDate() || new Date(doc.data().createdAt),
+          updatedAt: doc.data().updatedAt?.toDate() || new Date(doc.data().updatedAt),
+        }))
+        .filter((booking) => {
+          const checkIn = new Date(booking.checkIn);
+          const checkOut = new Date(booking.checkOut);
+          return (
+            (checkIn <= endOfSelectedMonth && checkOut >= startOfSelectedMonth)
+          );
+        }) as Booking[];
+
       setBookings(bookingsData);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -162,13 +170,16 @@ export default function Dashboard() {
   const handleAddBooking = async (bookingData: Omit<Booking, "id"> | any) => {
     try {
       const bookingRef = collection(db, COLLECTIONS.BOOKINGS);
+
+      // إضافة الحجز مباشرة كما هو
       await addDoc(bookingRef, {
         ...bookingData,
-        year: parseInt(year),
-        month: parseInt(month),
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        checkIn: Timestamp.fromDate(new Date(bookingData.checkIn)),
+        checkOut: Timestamp.fromDate(new Date(bookingData.checkOut)),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       });
+
       fetchBookings();
       setIsAddBookingOpen(false);
     } catch (error) {
@@ -526,6 +537,8 @@ export default function Dashboard() {
             onViewImage={function (_: string): void {
               throw new Error("Function not implemented.");
             }}
+            selectedMonth={parseInt(month)}
+            selectedYear={parseInt(year)}
           />
         )}
       </Box>

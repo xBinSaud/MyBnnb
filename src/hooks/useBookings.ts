@@ -22,41 +22,44 @@ export function useBookings(year?: string, month?: string) {
     try {
       setLoading(true);
       const bookingsRef = collection(db, COLLECTIONS.BOOKINGS);
-      let q = query(bookingsRef, orderBy("createdAt", "desc"));
 
-      if (year && month) {
-        q = query(
-          bookingsRef,
-          where("year", "==", parseInt(year)),
-          where("month", "==", parseInt(month)),
-          orderBy("createdAt", "desc")
-        );
-      }
-
+      // استعلام بسيط بدون الحاجة إلى index مركب
+      const q = query(bookingsRef);
       const snapshot = await getDocs(q);
-      const bookingsData = snapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          checkIn: data.checkIn?.toDate
-            ? data.checkIn.toDate()
-            : new Date(data.checkIn),
-          checkOut: data.checkOut?.toDate
-            ? data.checkOut.toDate()
-            : new Date(data.checkOut),
-          createdAt: data.createdAt?.toDate
-            ? data.createdAt.toDate()
-            : new Date(data.createdAt),
-          updatedAt: data.updatedAt?.toDate
-            ? data.updatedAt.toDate()
-            : new Date(data.updatedAt),
-        } as Booking;
-      });
+      
+      // تحديد بداية ونهاية الشهر المحدد
+      const startOfMonth = new Date(parseInt(year || new Date().getFullYear().toString()), parseInt(month || '1') - 1, 1);
+      const endOfMonth = new Date(parseInt(year || new Date().getFullYear().toString()), parseInt(month || '1'), 0);
+
+      // تصفية الحجوزات في الذاكرة
+      const bookingsData = snapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            checkIn: data.checkIn instanceof Timestamp ? data.checkIn.toDate() : new Date(data.checkIn),
+            checkOut: data.checkOut instanceof Timestamp ? data.checkOut.toDate() : new Date(data.checkOut),
+            createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date(data.createdAt),
+            updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt.toDate() : new Date(data.updatedAt),
+          } as Booking;
+        })
+        .filter((booking) => {
+          const checkIn = new Date(booking.checkIn);
+          const checkOut = new Date(booking.checkOut);
+          // الحجز يتداخل مع الشهر المحدد إذا:
+          // 1. تاريخ الدخول يقع في الشهر المحدد
+          // 2. تاريخ الخروج يقع في الشهر المحدد
+          // 3. الحجز يمتد عبر الشهر المحدد بالكامل
+          return (
+            (checkIn <= endOfMonth && checkOut >= startOfMonth)
+          );
+        });
 
       setBookings(bookingsData);
       setError(null);
     } catch (err) {
+      console.error("Error fetching bookings:", err);
       setError(err as Error);
     } finally {
       setLoading(false);

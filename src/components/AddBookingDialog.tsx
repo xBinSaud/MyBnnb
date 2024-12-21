@@ -41,6 +41,9 @@ interface AddBookingDialogProps {
     bookingSource: "airbnb" | "booking" | "cash" | "other";
     year: number;
     month: number;
+    isPartial?: boolean;
+    partialType?: 'first' | 'second';
+    numberOfDays?: number;
   }) => void;
   selectedMonth: string;
   selectedYear: string;
@@ -179,53 +182,105 @@ export function AddBookingDialog({
         setUploadProgress(false);
       }
 
-      const bookingData = {
-        clientName,
-        phoneNumber,
-        apartmentId: selectedApartment,
-        checkIn: checkIn.toISOString(),
-        checkOut: checkOut.toISOString(),
-        amount: parseFloat(amount),
-        bookingSource,
-        receiptImage: receiptUrl,
-        status: "active" as const,
-        year: checkIn.getFullYear(),
-        month: checkIn.getMonth() + 1,
-        createdAt: booking?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
+      // تحديد إذا كان الحجز يمتد عبر شهرين
+      const bookingMonth = checkIn.getMonth();
+      const checkOutMonth = checkOut.getMonth();
 
-      await onSubmit(bookingData);
+      if (bookingMonth !== checkOutMonth) {
+        // تحديد نهاية الشهر الأول
+        const endOfFirstMonth = new Date(checkIn.getFullYear(), checkIn.getMonth() + 1, 0, 23, 59, 59);
+        
+        // المبلغ اليومي كما تم إدخاله
+        const dailyAmount = parseFloat(amount);
+        
+        // حساب عدد الأيام في الشهر الأول
+        const daysInFirstMonth = Math.ceil((endOfFirstMonth.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        // إضافة حجز الشهر الأول
+        const firstMonthBooking = {
+          clientName,
+          phoneNumber,
+          apartmentId: selectedApartment,
+          checkIn: checkIn.toISOString(),
+          checkOut: endOfFirstMonth.toISOString(),
+          amount: dailyAmount,
+          totalAmount: dailyAmount * daysInFirstMonth,
+          bookingSource,
+          receiptImage: receiptUrl,
+          status: "active" as const,
+          year: checkIn.getFullYear(),
+          month: checkIn.getMonth() + 1,
+          createdAt: booking?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isPartial: true,
+          partialType: 'first',
+          numberOfDays: daysInFirstMonth
+        };
+
+        // إضافة حجز الشهر الثاني
+        const startOfSecondMonth = new Date(checkIn.getFullYear(), checkIn.getMonth() + 1, 1, 0, 0, 0);
+        // حساب عدد الأيام في الشهر الثاني بدون يوم الخروج
+        const daysInSecondMonth = Math.ceil((checkOut.getTime() - startOfSecondMonth.getTime()) / (1000 * 60 * 60 * 24));
+
+        const secondMonthBooking = {
+          clientName,
+          phoneNumber,
+          apartmentId: selectedApartment,
+          checkIn: startOfSecondMonth.toISOString(),
+          checkOut: checkOut.toISOString(),
+          amount: dailyAmount,
+          totalAmount: dailyAmount * daysInSecondMonth,
+          bookingSource,
+          receiptImage: receiptUrl,
+          status: "active" as const,
+          year: startOfSecondMonth.getFullYear(),
+          month: startOfSecondMonth.getMonth() + 1,
+          createdAt: booking?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isPartial: true,
+          partialType: 'second',
+          numberOfDays: daysInSecondMonth
+        };
+
+        // إضافة كلا الحجزين
+        await onSubmit(firstMonthBooking);
+        await onSubmit(secondMonthBooking);
+      } else {
+        // حجز عادي في نفس الشهر
+        const bookingData = {
+          clientName,
+          phoneNumber,
+          apartmentId: selectedApartment,
+          checkIn: checkIn.toISOString(),
+          checkOut: checkOut.toISOString(),
+          amount: parseFloat(amount),
+          bookingSource,
+          receiptImage: receiptUrl,
+          status: "active" as const,
+          year: parseInt(selectedYear),
+          month: parseInt(selectedMonth),
+          createdAt: booking?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isPartial: false
+        };
+
+        await onSubmit(bookingData);
+      }
+
       handleClose();
     } catch (error) {
       console.error("Error submitting booking:", error);
-      alert("حدث خطأ أثناء حفظ الحجز");
+      alert("حدث خطأ أثناء إضافة الحجز");
     } finally {
       setLoading(false);
     }
   };
 
-  const isDateInSelectedMonth = (date: Date | null) => {
-    if (!date) return false;
-    return (
-      date.getMonth() + 1 === parseInt(selectedMonth) &&
-      date.getFullYear() === parseInt(selectedYear)
-    );
-  };
-
   const handleCheckInChange = (newValue: Date | null) => {
-    if (newValue && !isDateInSelectedMonth(newValue)) {
-      alert("يجب أن يكون تاريخ الدخول في نفس الشهر المحدد");
-      return;
-    }
     setCheckIn(newValue || new Date());
   };
 
   const handleCheckOutChange = (newValue: Date | null) => {
-    if (newValue && !isDateInSelectedMonth(newValue)) {
-      alert("يجب أن يكون تاريخ الخروج في نفس الشهر المحدد");
-      return;
-    }
     setCheckOut(newValue || new Date());
   };
 
