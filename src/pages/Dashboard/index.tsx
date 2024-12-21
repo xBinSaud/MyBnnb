@@ -131,12 +131,17 @@ export default function Dashboard() {
     month: number;
   }): Promise<void> => {
     try {
-      const timestamp = new Date();
+      const expenseDate = expenseData.date instanceof Date
+        ? expenseData.date
+        : new Date(expenseData.date);
+
       const expenseToAdd = {
         ...expenseData,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        date: timestamp,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        date: expenseDate,
+        month: expenseDate.getMonth() + 1,
+        year: expenseDate.getFullYear(),
       };
 
       if (!expenseToAdd.receiptImage) {
@@ -196,7 +201,6 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate statistics
   const totalRevenue = bookings.reduce(
     (sum, booking) => sum + (booking.amount || 0),
     0
@@ -300,7 +304,6 @@ export default function Dashboard() {
         />
       </Box>
 
-      {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatCard
@@ -336,7 +339,6 @@ export default function Dashboard() {
         </Grid>
       </Grid>
 
-      {/* Expenses Section */}
       <Box sx={{ mt: 4 }}>
         <Box
           sx={{
@@ -439,7 +441,6 @@ export default function Dashboard() {
         )}
       </Box>
 
-      {/* Receipt Image Dialog */}
       <Dialog
         open={!!selectedExpenseImage}
         onClose={handleCloseReceipt}
@@ -467,7 +468,6 @@ export default function Dashboard() {
         </DialogActions>
       </Dialog>
 
-      {/* Bookings Section */}
       <Box sx={{ mt: 4 }}>
         <Box
           sx={{
