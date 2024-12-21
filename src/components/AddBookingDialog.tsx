@@ -213,7 +213,7 @@ export function AddBookingDialog({
           createdAt: booking?.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isPartial: true,
-          partialType: 'first',
+          partialType: 'first' as const,
           numberOfDays: daysInFirstMonth
         };
 
@@ -238,7 +238,7 @@ export function AddBookingDialog({
           createdAt: booking?.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
           isPartial: true,
-          partialType: 'second',
+          partialType: 'second' as const,
           numberOfDays: daysInSecondMonth
         };
 

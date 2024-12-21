@@ -288,6 +288,8 @@ export default function Bookings() {
             onEdit={handleEditBooking}
             onDelete={handleDeleteBooking}
             onViewImage={handleViewImage}
+            selectedMonth={parseInt(month)}
+            selectedYear={parseInt(year)}
           />
         )}
       </Box>
