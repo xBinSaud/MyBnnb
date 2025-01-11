@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,11 +10,11 @@ import {
   Chip,
   IconButton,
   InputAdornment,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import { useApartments } from '../hooks/useApartments';
-import { uploadImage } from '../config/cloudinary';
-import type { Apartment } from '../config/firebase';
+} from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import { useApartments } from "../hooks/useApartments";
+import { uploadImage } from "../config/cloudinary";
+import type { Apartment } from "../config/firebase";
 
 interface EditApartmentDialogProps {
   open: boolean;
@@ -28,11 +28,11 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
   apartment,
 }) => {
   const { updateApartment } = useApartments();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [pricePerNight, setPricePerNight] = useState('');
-  const [newAmenity, setNewAmenity] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [pricePerNight, setPricePerNight] = useState("");
+  const [newAmenity, setNewAmenity] = useState("");
   const [amenities, setAmenities] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -40,8 +40,8 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
   useEffect(() => {
     if (apartment) {
       setName(apartment.name);
-      setDescription(apartment.description || '');
-      setLocation(apartment.location);
+      setDescription(apartment.description || "");
+      setLocation(apartment.location || "");
       setPricePerNight(apartment.pricePerNight.toString());
       setAmenities(apartment.amenities);
       setImages(apartment.images || []);
@@ -51,15 +51,17 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
   const handleAddAmenity = () => {
     if (newAmenity.trim()) {
       setAmenities([...amenities, newAmenity.trim()]);
-      setNewAmenity('');
+      setNewAmenity("");
     }
   };
 
   const handleDeleteAmenity = (amenityToDelete: string) => {
-    setAmenities(amenities.filter(amenity => amenity !== amenityToDelete));
+    setAmenities(amenities.filter((amenity) => amenity !== amenityToDelete));
   };
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     if (event.target.files && event.target.files[0]) {
       try {
         setUploading(true);
@@ -67,7 +69,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
         const imageUrl = await uploadImage(file);
         setImages([...images, imageUrl]);
       } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error("Error uploading image:", error);
       } finally {
         setUploading(false);
       }
@@ -92,11 +94,12 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
       });
       onClose();
     } catch (error) {
-      console.error('Error updating apartment:', error);
+      console.error("Error updating apartment:", error);
     }
   };
 
-  const isSubmitDisabled = !name || !location || !pricePerNight || amenities.length === 0;
+  const isSubmitDisabled =
+    !name || !location || !pricePerNight || amenities.length === 0;
 
   if (!apartment) return null;
 
@@ -104,7 +107,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>تعديل الشقة</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
           <TextField
             label="اسم الشقة"
             value={name}
@@ -132,7 +135,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
             value={pricePerNight}
             onChange={(e) => {
               const value = e.target.value;
-              const numericValue = value.replace(/[^0-9]/g, '');
+              const numericValue = value.replace(/[^0-9]/g, "");
               setPricePerNight(numericValue);
             }}
             type="number"
@@ -149,7 +152,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
               value={newAmenity}
               onChange={(e) => setNewAmenity(e.target.value)}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   handleAddAmenity();
                 }
@@ -165,7 +168,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
                 ),
               }}
             />
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
               {amenities.map((amenity) => (
                 <Chip
                   key={amenity}
@@ -179,7 +182,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
           <Box>
             <input
               accept="image/*"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               id="edit-apartment-image"
               type="file"
               onChange={handleImageUpload}
@@ -192,16 +195,16 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
                 disabled={uploading}
                 fullWidth
               >
-                {uploading ? 'جاري الرفع...' : 'إضافة صورة'}
+                {uploading ? "جاري الرفع..." : "إضافة صورة"}
               </Button>
             </label>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1 }}>
               {images.map((image, index) => (
                 <Box
                   key={index}
                   sx={{
-                    position: 'relative',
-                    '&:hover .delete-icon': {
+                    position: "relative",
+                    "&:hover .delete-icon": {
                       opacity: 1,
                     },
                   }}
@@ -214,7 +217,7 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
                       width: 100,
                       height: 100,
                       borderRadius: 1,
-                      objectFit: 'cover',
+                      objectFit: "cover",
                     }}
                   />
                   <IconButton
@@ -222,20 +225,18 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
                     size="small"
                     onClick={() => handleDeleteImage(index)}
                     sx={{
-                      position: 'absolute',
+                      position: "absolute",
                       top: -8,
                       right: -8,
                       opacity: 0,
-                      transition: 'opacity 0.2s',
-                      backgroundColor: 'error.main',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'error.dark',
+                      transition: "opacity 0.2s",
+                      backgroundColor: "error.main",
+                      color: "white",
+                      "&:hover": {
+                        backgroundColor: "error.dark",
                       },
                     }}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
+                  ></IconButton>
                 </Box>
               ))}
             </Box>

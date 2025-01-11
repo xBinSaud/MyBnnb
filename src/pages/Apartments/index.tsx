@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Box,
   Typography,
@@ -16,28 +16,30 @@ import {
   Alert,
   TextField,
   InputAdornment,
-} from '@mui/material';
-import { useTranslation } from 'react-i18next';
-import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ImageIcon from '@mui/icons-material/Image';
-import { useApartments } from '../../hooks/useApartments';
-import { AddApartmentDialog } from '../../components/AddApartmentDialog';
-import { EditApartmentDialog } from '../../components/EditApartmentDialog';
-import { formatPrice } from '../../utils/dateUtils';
+} from "@mui/material";
+import { useTranslation } from "react-i18next";
+import SearchIcon from "@mui/icons-material/Search";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ImageIcon from "@mui/icons-material/Image";
+import { useApartments } from "../../hooks/useApartments";
+import { AddApartmentDialog } from "../../components/AddApartmentDialog";
+import { EditApartmentDialog } from "../../components/EditApartmentDialog";
+import { formatPrice } from "../../utils/dateUtils";
 
 export default function Apartments() {
   const { t } = useTranslation();
-  const { apartments, loading, error, deleteApartment } = useApartments();
+  const { apartments, loading, error } = useApartments();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedApartment, setSelectedApartment] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedApartment, setSelectedApartment] = useState<string | null>(
+    null
+  );
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [_, setOpenDeleteDialog] = useState(false);
 
   const handleEditClick = (apartmentId: string) => {
     setSelectedApartment(apartmentId);
@@ -49,25 +51,30 @@ export default function Apartments() {
     setOpenDeleteDialog(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (selectedApartment) {
-      try {
-        await deleteApartment(selectedApartment);
-        setOpenDeleteDialog(false);
-        setSelectedApartment(null);
-      } catch (error) {
-        console.error('Error deleting apartment:', error);
-      }
-    }
-  };
+  // const handleConfirmDelete = async () => {
+  //   if (selectedApartment) {
+  //     try {
+  //       await deleteApartment(selectedApartment);
+  //       setOpenDeleteDialog(false);
+  //       setSelectedApartment(null);
+  //     } catch (error) {
+  //       console.error("Error deleting apartment:", error);
+  //     }
+  //   }
+  // };
 
-  const filteredApartments = apartments.filter(apartment =>
+  const filteredApartments = apartments.filter((apartment) =>
     apartment.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="400px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -83,9 +90,14 @@ export default function Apartments() {
 
   return (
     <Box>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={4}
+      >
         <Typography variant="h4" component="h1">
-          {t('apartments.title')}
+          {t("apartments.title")}
         </Typography>
         <Button
           variant="contained"
@@ -112,7 +124,7 @@ export default function Apartments() {
             ),
           }}
           sx={{
-            '& .MuiOutlinedInput-root': {
+            "& .MuiOutlinedInput-root": {
               borderRadius: 2,
             },
           }}
@@ -123,7 +135,7 @@ export default function Apartments() {
         component={Paper}
         sx={{
           borderRadius: 2,
-          overflow: 'hidden',
+          overflow: "hidden",
           mb: 2,
         }}
       >
@@ -146,9 +158,7 @@ export default function Apartments() {
                   <TableCell>{apartment.name}</TableCell>
                   <TableCell>{apartment.location}</TableCell>
                   <TableCell>{formatPrice(apartment.pricePerNight)}</TableCell>
-                  <TableCell>
-                    {apartment.amenities.join('، ')}
-                  </TableCell>
+                  <TableCell>{apartment.amenities.join("، ")}</TableCell>
                   <TableCell align="center">
                     {apartment.images && apartment.images.length > 0 ? (
                       <Box
@@ -159,7 +169,7 @@ export default function Apartments() {
                           width: 40,
                           height: 40,
                           borderRadius: 1,
-                          objectFit: 'cover',
+                          objectFit: "cover",
                         }}
                       />
                     ) : (
@@ -169,7 +179,9 @@ export default function Apartments() {
                     )}
                   </TableCell>
                   <TableCell align="center">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                    <Box
+                      sx={{ display: "flex", gap: 1, justifyContent: "center" }}
+                    >
                       <IconButton
                         size="small"
                         onClick={() => handleEditClick(apartment.id)}
@@ -219,11 +231,11 @@ export default function Apartments() {
           setOpenEditDialog(false);
           setSelectedApartment(null);
         }}
-        apartment={apartments.find(a => a.id === selectedApartment) || null}
+        apartment={apartments.find((a) => a.id === selectedApartment) || null}
       />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog
+      {/* <Dialog
         open={openDeleteDialog}
         onClose={() => {
           setOpenDeleteDialog(false);
@@ -239,10 +251,12 @@ export default function Apartments() {
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => {
-            setOpenDeleteDialog(false);
-            setSelectedApartment(null);
-          }}>
+          <Button
+            onClick={() => {
+              setOpenDeleteDialog(false);
+              setSelectedApartment(null);
+            }}
+          >
             إلغاء
           </Button>
           <Button
@@ -253,7 +267,7 @@ export default function Apartments() {
             حذف
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
     </Box>
   );
 }

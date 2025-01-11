@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,14 +9,14 @@ import {
   Box,
   Typography,
   CircularProgress,
-} from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import { uploadImage } from '../config/cloudinary';
-import type { Expense } from '../config/firebase';
-import { arSA } from 'date-fns/locale';
+} from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { uploadImage } from "../config/cloudinary";
+import type { Expense } from "../config/firebase";
+import { arSA } from "date-fns/locale";
 
 interface ExpenseFormData {
   description: string;
@@ -42,10 +42,10 @@ export const AddExpenseDialog: React.FC<Props> = ({
   onSubmit,
   selectedMonth,
   selectedYear,
-  expense
+  expense,
 }) => {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
   const [date, setDate] = useState<Date | null>(new Date());
   const [receipt, setReceipt] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,12 +54,18 @@ export const AddExpenseDialog: React.FC<Props> = ({
 
   useEffect(() => {
     if (expense) {
-      setDescription(expense.description || '');
-      setAmount(expense.amount?.toString() || '');
-      setDate(expense.date instanceof Date ? expense.date : new Date(expense.date));
+      setDescription(expense.description || "");
+      setAmount(expense.amount?.toString() || "");
+      setDate(
+        expense.date instanceof Date
+          ? expense.date
+          : "toDate" in expense.date
+          ? expense.date.toDate() // Call toDate() if it's a Firestore timestamp
+          : new Date(expense.date) // Fallback to creating a new Date if it's a string
+      );
     } else {
-      setDescription('');
-      setAmount('');
+      setDescription("");
+      setAmount("");
       setDate(new Date());
       setReceipt(null);
       setPreviewUrl(null);
@@ -69,14 +75,18 @@ export const AddExpenseDialog: React.FC<Props> = ({
   useEffect(() => {
     if (open) {
       // Set initial date to the first day of selected month
-      const initialDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1);
+      const initialDate = new Date(
+        parseInt(selectedYear),
+        parseInt(selectedMonth) - 1,
+        1
+      );
       setDate(initialDate);
     }
   }, [open, selectedMonth, selectedYear]);
 
   const handleClose = () => {
-    setDescription('');
-    setAmount('');
+    setDescription("");
+    setAmount("");
     setDate(new Date());
     setReceipt(null);
     setPreviewUrl(null);
@@ -98,7 +108,7 @@ export const AddExpenseDialog: React.FC<Props> = ({
 
   const handleSubmit = async () => {
     if (!description || !amount || !date) return;
-    
+
     setLoading(true);
     try {
       let receiptImage = null;
@@ -106,9 +116,9 @@ export const AddExpenseDialog: React.FC<Props> = ({
         setUploadProgress(true);
         try {
           receiptImage = await uploadImage(receipt);
-          console.log('Receipt image URL:', receiptImage);
+          console.log("Receipt image URL:", receiptImage);
         } catch (uploadError) {
-          console.error('Error uploading image:', uploadError);
+          console.error("Error uploading image:", uploadError);
           // Continue without image if upload fails
         }
         setUploadProgress(false);
@@ -120,14 +130,14 @@ export const AddExpenseDialog: React.FC<Props> = ({
         date: new Date(date),
         receiptImage,
         year: parseInt(selectedYear),
-        month: parseInt(selectedMonth)
+        month: parseInt(selectedMonth),
       };
 
-      console.log('Submitting expense data:', expenseData);
+      console.log("Submitting expense data:", expenseData);
       await onSubmit(expenseData);
       handleClose();
     } catch (error) {
-      console.error('Error submitting expense:', error);
+      console.error("Error submitting expense:", error);
     } finally {
       setLoading(false);
     }
@@ -135,24 +145,30 @@ export const AddExpenseDialog: React.FC<Props> = ({
 
   const isDateInSelectedMonth = (date: Date | null) => {
     if (!date) return false;
-    return date.getMonth() + 1 === parseInt(selectedMonth) && date.getFullYear() === parseInt(selectedYear);
+    return (
+      date.getMonth() + 1 === parseInt(selectedMonth) &&
+      date.getFullYear() === parseInt(selectedYear)
+    );
   };
 
   const handleDateChange = (newValue: Date | null) => {
     if (newValue && !isDateInSelectedMonth(newValue)) {
-      alert('يجب أن يكون التاريخ في نفس الشهر المحدد');
+      alert("يجب أن يكون التاريخ في نفس الشهر المحدد");
       return;
     }
     setDate(newValue);
   };
 
-  const defaultMonth = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1);
+  // const defaultMonth = new Date(
+  //   parseInt(selectedYear),
+  //   parseInt(selectedMonth) - 1
+  // );
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{expense ? 'تعديل مصروف' : 'إضافة مصروف'}</DialogTitle>
+      <DialogTitle>{expense ? "تعديل مصروف" : "إضافة مصروف"}</DialogTitle>
       <DialogContent>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
           <TextField
             id="expense-description"
             name="description"
@@ -170,20 +186,22 @@ export const AddExpenseDialog: React.FC<Props> = ({
             onChange={(e) => setAmount(e.target.value)}
             fullWidth
           />
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={arSA}>
+          <LocalizationProvider
+            dateAdapter={AdapterDateFns}
+            adapterLocale={arSA}
+          >
             <DatePicker
               label="التاريخ"
               value={date}
               onChange={handleDateChange}
               slotProps={{
                 textField: {
-                  id: 'expense-date',
-                  name: 'date',
-                  fullWidth: true
-                }
+                  id: "expense-date",
+                  name: "date",
+                  fullWidth: true,
+                },
               }}
-              defaultCalendarMonth={defaultMonth}
-              views={['year', 'month', 'day']}
+              views={["year", "month", "day"]}
               openTo="day"
             />
           </LocalizationProvider>
@@ -203,24 +221,24 @@ export const AddExpenseDialog: React.FC<Props> = ({
               fullWidth
               disabled={uploadProgress}
             >
-              {receipt ? 'تغيير الإيصال' : 'رفع الإيصال'}
+              {receipt ? "تغيير الإيصال" : "رفع الإيصال"}
             </Button>
           </label>
           {(receipt || expense?.receiptImage) && (
-            <Box sx={{ mb: 2, textAlign: 'center' }}>
+            <Box sx={{ mb: 2, textAlign: "center" }}>
               {previewUrl && (
-                <img 
-                  src={previewUrl} 
-                  alt="Receipt preview" 
-                  style={{ 
-                    maxWidth: '100%', 
-                    maxHeight: '200px', 
-                    objectFit: 'contain' 
-                  }} 
+                <img
+                  src={previewUrl}
+                  alt="Receipt preview"
+                  style={{
+                    maxWidth: "100%",
+                    maxHeight: "200px",
+                    objectFit: "contain",
+                  }}
                 />
               )}
-              <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
-                {receipt ? receipt.name : 'تم رفع الإيصال مسبقاً'}
+              <Typography variant="caption" sx={{ display: "block", mt: 1 }}>
+                {receipt ? receipt.name : "تم رفع الإيصال مسبقاً"}
               </Typography>
             </Box>
           )}
@@ -230,15 +248,15 @@ export const AddExpenseDialog: React.FC<Props> = ({
         <Button onClick={handleClose} disabled={loading || uploadProgress}>
           إلغاء
         </Button>
-        <Button 
-          onClick={handleSubmit} 
-          variant="contained" 
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
           disabled={loading || uploadProgress}
           startIcon={loading ? <CircularProgress size={20} /> : null}
         >
-          {loading ? 'جاري الإضافة...' : 'حفظ'}
+          {loading ? "جاري الإضافة..." : "حفظ"}
         </Button>
       </DialogActions>
     </Dialog>
   );
-}
+};
