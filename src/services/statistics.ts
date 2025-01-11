@@ -1,6 +1,5 @@
 import { collection, getDocs, query, where, Timestamp } from 'firebase/firestore';
-import { db, COLLECTIONS } from '../config/firebase';
-import { Booking, Expense, Apartment } from '../types';
+import { db, COLLECTIONS, Booking, Expense, Apartment } from '../config/firebase';
 import { Statistics, BookingStats, FinancialStats, MonthlyStats } from '../types/statistics';
 import { format, differenceInDays, isWithinInterval, startOfMonth, endOfMonth, parseISO, startOfYear, endOfYear } from 'date-fns';
 import { arSA } from 'date-fns/locale';

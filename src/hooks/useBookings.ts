@@ -28,8 +28,8 @@ export function useBookings(year?: string, month?: string) {
       const snapshot = await getDocs(q);
       
       // تحديد بداية ونهاية الشهر المحدد
-      const startOfMonth = new Date(parseInt(year || new Date().getFullYear().toString()), parseInt(month || '1') - 1, 1);
-      const endOfMonth = new Date(parseInt(year || new Date().getFullYear().toString()), parseInt(month || '1'), 0);
+      const startOfMonth = new Date(parseInt(year || "2024"), parseInt(month || '1') - 1, 1);
+      const endOfMonth = new Date(parseInt(year || "2024"), parseInt(month || '1'), 0, 23, 59, 59);
 
       // تصفية الحجوزات في الذاكرة
       const bookingsData = snapshot.docs
@@ -47,12 +47,14 @@ export function useBookings(year?: string, month?: string) {
         .filter((booking) => {
           const checkIn = new Date(booking.checkIn);
           const checkOut = new Date(booking.checkOut);
+          
           // الحجز يتداخل مع الشهر المحدد إذا:
-          // 1. تاريخ الدخول يقع في الشهر المحدد
-          // 2. تاريخ الخروج يقع في الشهر المحدد
+          // 1. تاريخ الدخول يقع في الشهر المحدد، أو
+          // 2. تاريخ الخروج يقع في الشهر المحدد، أو
           // 3. الحجز يمتد عبر الشهر المحدد بالكامل
           return (
-            (checkIn <= endOfMonth && checkOut >= startOfMonth)
+            (checkIn.getFullYear() === parseInt(year || "2024") && checkIn.getMonth() === parseInt(month || '1') - 1) ||
+            (checkOut.getFullYear() === parseInt(year || "2024") && checkOut.getMonth() === parseInt(month || '1') - 1)
           );
         });
 

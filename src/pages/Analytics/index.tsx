@@ -38,7 +38,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 export default function Analytics() {
   const theme = useTheme();
   const [selectedMonth, setSelectedMonth] = useState(-1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(2024);
   const { statistics, loading, error, refreshStatistics } = useStatistics(selectedYear);
 
   const months = [
@@ -47,12 +47,7 @@ export default function Analytics() {
     'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
   ];
 
-  const startYear = 2024;
-  const currentYear = new Date().getFullYear();
-  const years = Array.from(
-    { length: currentYear - startYear + 2 },
-    (_, i) => startYear + i
-  );
+  const years = Array.from({ length: 7 }, (_, i) => 2024 + i);
 
   const currentStats = useMemo(() => {
     if (!statistics) return null;
@@ -99,7 +94,7 @@ export default function Analytics() {
   }
 
   const handleYearChange = (event: SelectChangeEvent<number>) => {
-    setSelectedYear(event.target.value as number);
+    setSelectedYear(Number(event.target.value));
     refreshStatistics();
   };
 
@@ -159,8 +154,9 @@ export default function Analytics() {
               <Grid item>
                 <Select
                   value={selectedYear}
-                  onChange={handleYearChange}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
                   size="small"
+                  sx={{ minWidth: 100 }}
                 >
                   {years.map((year) => (
                     <MenuItem key={year} value={year}>

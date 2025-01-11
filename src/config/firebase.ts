@@ -77,6 +77,12 @@ export interface Booking {
   checkOut?: Date;
   amount: number;
   receiptImage?: string;
+  receipts?: {
+    id: string;
+    url: string;
+    note?: string;
+    uploadDate: string;
+  }[];
   status: "active" | "cancelled";
   bookingSource: "airbnb" | "booking" | "cash" | "other";
   year: number;

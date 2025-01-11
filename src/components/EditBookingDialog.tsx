@@ -7,15 +7,26 @@ import {
   Button,
   TextField,
   Box,
-  Stack,
   Alert,
+  IconButton,
+  Typography,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { LocalizationProvider } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { arSA } from "date-fns/locale";
 import { isAfter } from "date-fns";
-import type { Booking } from "../config/firebase";
+import { Booking, Receipt } from "../config/firebase";
 import { useBookingDates } from "../hooks/useBookingDates";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { uploadImage } from "../config/cloudinary";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../config/firebase";
 
 interface EditBookingDialogProps {
   open: boolean;
@@ -36,6 +47,11 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   const [checkOut, setCheckOut] = useState<Date | null>(null);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [dateError, setDateError] = useState<string>("");
+  const [receipts, setReceipts] = useState<Receipt[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [selectedApartment, setSelectedApartment] = useState("");
+  const [apartments, setApartments] = useState<any[]>([]);
+  const [bookingSource, setBookingSource] = useState<"airbnb" | "booking" | "cash" | "other">("cash");
 
   const { isDateBooked, areAllDatesAvailable } = useBookingDates({
     apartmentId: booking?.apartmentId || "",
@@ -45,24 +61,52 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
   });
 
   useEffect(() => {
+    const fetchApartments = async () => {
+      try {
+        const apartmentsSnapshot = await getDocs(collection(db, "apartments"));
+        const apartmentsData = apartmentsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setApartments(apartmentsData);
+      } catch (error) {
+        console.error("Error fetching apartments:", error);
+      }
+    };
+    fetchApartments();
+  }, []);
+
+  useEffect(() => {
     if (booking) {
       setClientName(booking.clientName || "");
       setPhoneNumber(booking.phoneNumber || "");
-      setCheckIn(
-        booking.checkIn instanceof Date
-          ? booking.checkIn
-          : new Date(booking.checkIn || new Date())
-      );
-      setCheckOut(
-        booking.checkOut instanceof Date
-          ? booking.checkOut
-          : new Date(booking.checkOut || new Date())
-      );
+      setCheckIn(booking.checkIn ? new Date(booking.checkIn) : null);
+      setCheckOut(booking.checkOut ? new Date(booking.checkOut) : null);
       setTotalAmount(booking.amount || 0);
+      setSelectedApartment(booking.apartmentId || "");
+      setBookingSource(booking.bookingSource || "cash");
+      
+      // Handle both old and new receipt formats
+      if (booking.receipts && booking.receipts.length > 0) {
+        setReceipts(booking.receipts);
+      } else if (booking.receiptImage) {
+        // Convert old format to new format
+        setReceipts([
+          {
+            id: "legacy",
+            bookingId: booking.id,
+            imageUrl: booking.receiptImage,
+            uploadedAt: booking.updatedAt || new Date(),
+            amount: booking.amount || 0,
+            note: "",
+          },
+        ]);
+      } else {
+        setReceipts([]);
+      }
     }
   }, [booking]);
 
-  // Validate dates whenever they change
   useEffect(() => {
     if (checkIn && checkOut) {
       if (!isAfter(checkOut, checkIn)) {
@@ -77,18 +121,51 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
     }
   }, [checkIn, checkOut, areAllDatesAvailable]);
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !booking) return;
+
+    try {
+      setUploading(true);
+      const imageUrl = await uploadImage(file);
+      
+      // Add new receipt to the receipts array
+      const newReceipt: Receipt = {
+        id: `receipt_${Date.now()}`,
+        bookingId: booking.id,
+        imageUrl: imageUrl,
+        uploadedAt: new Date(),
+        amount: totalAmount,
+        note: "",
+      };
+      
+      setReceipts((prev) => [...prev, newReceipt]);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("حدث خطأ أثناء رفع الصورة");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteReceipt = (receiptId: string) => {
+    setReceipts(prev => prev.filter(receipt => receipt.id !== receiptId));
+  };
+
   const handleSubmit = async () => {
-    if (!booking || !checkIn || !checkOut || !clientName || !phoneNumber)
-      return;
+    if (!booking || !checkIn || !checkOut || !clientName || !phoneNumber || !selectedApartment) return;
     if (dateError) return;
 
     try {
       await onSubmit(booking.id, {
         clientName,
         phoneNumber,
-        checkIn: checkIn,
-        checkOut: checkOut,
+        checkIn,
+        checkOut,
         amount: totalAmount,
+        receipts: receipts,
+        apartmentId: selectedApartment,
+        bookingSource,
         updatedAt: new Date(),
       });
       onClose();
@@ -98,13 +175,12 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
     }
   };
 
-  const isSubmitDisabled =
-    !checkIn || !checkOut || !clientName || !phoneNumber || !!dateError;
+  const isSubmitDisabled = !checkIn || !checkOut || !clientName || !phoneNumber || !selectedApartment || !!dateError;
 
   if (!booking) return null;
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <LocalizationProvider dateAdapter={AdapterDateFns} locale={arSA}>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
         <DialogTitle>تعديل الحجز</DialogTitle>
         <DialogContent>
@@ -124,11 +200,38 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
               required
             />
 
-            <Stack
-              spacing={2}
-              direction={{ xs: "column", sm: "row" }}
-              sx={{ width: "100%" }}
-            >
+            <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
+              <FormControl fullWidth required>
+                <InputLabel>الشقة</InputLabel>
+                <Select
+                  value={selectedApartment}
+                  onChange={(e) => setSelectedApartment(e.target.value)}
+                  label="الشقة"
+                >
+                  {apartments.map((apartment) => (
+                    <MenuItem key={apartment.id} value={apartment.id}>
+                      {apartment.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              
+              <FormControl fullWidth required>
+                <InputLabel>طريقة الحجز</InputLabel>
+                <Select
+                  value={bookingSource}
+                  onChange={(e) => setBookingSource(e.target.value as "airbnb" | "booking" | "cash" | "other")}
+                  label="طريقة الحجز"
+                >
+                  <MenuItem value="airbnb">Airbnb</MenuItem>
+                  <MenuItem value="booking">Booking</MenuItem>
+                  <MenuItem value="cash">كاش</MenuItem>
+                  <MenuItem value="other">أخرى</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Box sx={{ display: "flex", gap: 2 }}>
               <DatePicker
                 label="تاريخ الوصول"
                 value={checkIn}
@@ -156,7 +259,7 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
                   },
                 }}
               />
-            </Stack>
+            </Box>
 
             {dateError && (
               <Alert severity="error" sx={{ mt: 1 }}>
@@ -176,15 +279,94 @@ export const EditBookingDialog: React.FC<EditBookingDialogProps> = ({
               fullWidth
               required
             />
+
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                الإيصالات
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
+                  flexWrap: "wrap",
+                }}
+              >
+                <input
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  id="receipt-upload"
+                  type="file"
+                  onChange={handleFileUpload}
+                  disabled={uploading}
+                />
+                <label htmlFor="receipt-upload">
+                  <Button
+                    component="span"
+                    variant="outlined"
+                    startIcon={<CloudUploadIcon />}
+                    disabled={uploading}
+                  >
+                    {uploading ? "جاري الرفع..." : "رفع إيصال جديد"}
+                  </Button>
+                </label>
+              </Box>
+              
+              {receipts.length > 0 && (
+                <Box sx={{ mt: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+                  {receipts.map((receipt) => (
+                    <Box 
+                      key={receipt.id} 
+                      sx={{ 
+                        position: "relative",
+                        '&:hover .delete-icon': {
+                          opacity: 1,
+                        }
+                      }}
+                    >
+                      <IconButton
+                        className="delete-icon"
+                        onClick={() => handleDeleteReceipt(receipt.id)}
+                        sx={{
+                          position: 'absolute',
+                          top: -8,
+                          right: -8,
+                          bgcolor: 'error.main',
+                          color: 'white',
+                          opacity: 0,
+                          transition: 'opacity 0.2s',
+                          zIndex: 1,
+                          padding: '4px',
+                          '&:hover': {
+                            bgcolor: 'error.dark',
+                          },
+                          '& .MuiSvgIcon-root': {
+                            fontSize: '1rem',
+                          },
+                        }}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <img
+                        src={receipt.imageUrl}
+                        alt="Receipt"
+                        style={{
+                          width: "100px",
+                          height: "100px",
+                          objectFit: "cover",
+                          borderRadius: "4px",
+                        }}
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>إلغاء</Button>
-          <Button
-            onClick={handleSubmit}
-            variant="contained"
-            disabled={isSubmitDisabled}
-          >
+          <Button onClick={handleSubmit} variant="contained" disabled={isSubmitDisabled}>
             حفظ التغييرات
           </Button>
         </DialogActions>

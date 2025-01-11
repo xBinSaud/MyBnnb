@@ -23,12 +23,11 @@ const months = [
 export default function BookingsByMonth() {
   const theme = useTheme();
   const navigate = useNavigate();
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectedYear, setSelectedYear] = useState(2024);
   
   const years = Array.from(
-    { length: 5 },
-    (_, i) => currentYear + i
+    { length: 7 },
+    (_, i) => 2024 + i
   );
 
   const handleMonthClick = (monthIndex: number) => {

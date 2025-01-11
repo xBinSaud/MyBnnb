@@ -20,7 +20,7 @@ import { AddBookingDialog } from "../../components/AddBookingDialog";
 import { EditBookingDialog } from "../../components/EditBookingDialog";
 import { AddExpenseDialog } from "../../components/AddExpenseDialog";
 import { EditExpenseDialog } from "../../components/EditExpenseDialog";
-import type { Booking, Expense } from "../../types";
+import { Booking, Expense } from "../../config/firebase";
 import { useExpenses } from "../../hooks/useExpenses";
 import { db } from "../../config/firebase";
 import {
@@ -108,19 +108,82 @@ export default function Bookings() {
   const handleAddBooking = async (bookingData: any) => {
     try {
       const bookingRef = collection(db, "bookings");
-      const newBooking = {
-        ...bookingData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        year: parseInt(year || "2024"),
-        month: parseInt(month || "1"),
-      };
+      const checkIn = new Date(bookingData.checkIn);
+      const checkOut = new Date(bookingData.checkOut);
 
-      await addDoc(bookingRef, newBooking);
+      // Check if booking spans multiple months
+      const checkInMonth = checkIn.getMonth();
+      const checkOutMonth = checkOut.getMonth();
+
+      // Calculate total days (excluding checkout day)
+      const totalDays = Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (checkInMonth !== checkOutMonth) {
+        // Split booking into two parts
+        const lastDayOfMonth = new Date(checkIn.getFullYear(), checkInMonth + 1, 0);
+        lastDayOfMonth.setHours(23, 59, 59, 999);
+
+        const firstDayOfNextMonth = new Date(checkIn.getFullYear(), checkInMonth + 1, 1);
+
+        // Calculate days for each part (excluding checkout day)
+        const firstPartDays = Math.floor((lastDayOfMonth.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) + 1; // +1 because we include the last day of the month
+        const secondPartDays = Math.floor((checkOut.getTime() - firstDayOfNextMonth.getTime()) / (1000 * 60 * 60 * 24)); // Don't add 1 here as we don't count checkout day
+
+        // First part of booking (current month)
+        const firstBooking = {
+          ...bookingData,
+          checkOut: lastDayOfMonth.toISOString(),
+          amount: bookingData.amount, // نفس المبلغ كما تم إدخاله
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          year: parseInt(year),
+          month: checkInMonth + 1,
+          isPartial: true,
+          partialType: "first",
+          numberOfDays: firstPartDays,
+          dailyRate: bookingData.amount
+        };
+
+        // Second part of booking (next month)
+        const secondBooking = {
+          ...bookingData,
+          checkIn: firstDayOfNextMonth.toISOString(),
+          amount: bookingData.amount, // نفس المبلغ كما تم إدخاله
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          year: parseInt(year),
+          month: checkOutMonth + 1,
+          isPartial: true,
+          partialType: "second",
+          numberOfDays: secondPartDays,
+          dailyRate: bookingData.amount
+        };
+
+        // Add both bookings
+        await addDoc(bookingRef, firstBooking);
+        await addDoc(bookingRef, secondBooking);
+      } else {
+        // Single month booking
+        const numberOfDays = Math.floor((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+
+        const newBooking = {
+          ...bookingData,
+          amount: bookingData.amount, // نفس المبلغ كما تم إدخاله
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          year: parseInt(year),
+          month: checkInMonth + 1,
+          numberOfDays: numberOfDays,
+          dailyRate: bookingData.amount
+        };
+        await addDoc(bookingRef, newBooking);
+      }
+
       setOpenAddDialog(false);
       refetch();
     } catch (error) {
       console.error("Error adding booking:", error);
+      alert("حدث خطأ أثناء إضافة الحجز");
     }
   };
 

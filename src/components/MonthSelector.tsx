@@ -33,7 +33,7 @@ export const MonthSelector: React.FC<MonthSelectorProps> = ({
 }) => {
   const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+  const years = Array.from({ length: 7 }, (_, i) => 2024 + i);
   const months = [
     { value: 1, label: "يناير" },
     { value: 2, label: "فبراير" },
